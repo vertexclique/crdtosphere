@@ -1,0 +1,39 @@
+[package]
+name = "stm32_nucleo_f767zi_demo"
+version = "0.1.0"
+edition = "2021"
+authors = ["CRDTosphere Team"]
+description = "STM32 NUCLEO-F767ZI demonstration of CRDTosphere with LED indicators"
+
+[dependencies]
+crdtosphere = { path = "../..", default-features = false, features = ["stm32"] }
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+embedded-hal = "0.2"
+nb = "1.0"
+panic-halt = "0.2"
+heapless = "0.8"
+
+# STM32F7 specific dependencies
+stm32f7xx-hal = { version = "0.7", features = ["stm32f767", "rt"] }
+
+# Debugging and logging
+defmt = "0.3"
+defmt-rtt = "0.4"
+critical-section = { version = "1.1", features = ["restore-state-u8"] }
+
+[profile.dev]
+debug = 2
+opt-level = 1
+lto = false
+
+[profile.release]
+debug = 2
+lto = true
+opt-level = "s"  # Optimize for size
+codegen-units = 1
+
+# Ensure we're building for the correct target
+[[bin]]
+name = "stm32_nucleo_f767zi_demo"
+path = "src/main.rs"

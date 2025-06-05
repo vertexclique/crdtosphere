@@ -1,0 +1,13 @@
+[target.thumbv7em-none-eabihf]
+runner = "probe-rs run --chip STM32F767ZI"
+rustflags = [
+  "-C", "link-arg=-Tlink.x",
+  "-C", "target-cpu=cortex-m7",
+  "-C", "link-arg=-Tdefmt.x",
+]
+
+[build]
+target = "thumbv7em-none-eabihf"
+
+[env]
+DEFMT_LOG = "info"
