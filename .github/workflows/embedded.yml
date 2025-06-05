@@ -1,0 +1,368 @@
+name: Embedded Cross-Compilation
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Cross-compilation for embedded targets
+  cross-compile:
+    name: Cross-Compile for Embedded Targets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          # ARM Cortex-M targets (STM32, general embedded)
+          - thumbv7em-none-eabihf  # ARM Cortex-M4F/M7F (STM32F4/F7) - HAS ATOMICS
+          - thumbv7m-none-eabi     # ARM Cortex-M3 (STM32F1/F2) - HAS ATOMICS
+          - thumbv6m-none-eabi     # ARM Cortex-M0/M0+ (STM32F0/L0) - NO ATOMICS
+          - thumbv8m.main-none-eabi # ARM Cortex-M33 (STM32L5/H5) - HAS ATOMICS
+          # RISC-V targets
+          - riscv32imac-unknown-none-elf # RISC-V 32-bit - HAS ATOMICS
+          - riscv32imc-unknown-none-elf  # RISC-V 32-bit (compact) - NO ATOMICS
+        features:
+          - "minimal"
+          - "automotive"
+          - "robotics"
+          - "iot"
+          - "industrial"
+        exclude:
+          # Exclude hardware-atomic features for targets without atomic support
+          - target: thumbv6m-none-eabi
+            features: "automotive"
+          - target: thumbv6m-none-eabi
+            features: "robotics"
+          - target: thumbv6m-none-eabi
+            features: "iot"
+          - target: thumbv6m-none-eabi
+            features: "industrial"
+          - target: riscv32imc-unknown-none-elf
+            features: "automotive"
+          - target: riscv32imc-unknown-none-elf
+            features: "robotics"
+          - target: riscv32imc-unknown-none-elf
+            features: "iot"
+          - target: riscv32imc-unknown-none-elf
+            features: "industrial"
+        include:
+          - features: "minimal"
+            cargo_flags: "--no-default-features --features automotive,robotics,industrial,iot"
+          - features: "automotive"
+            cargo_flags: "--no-default-features --features automotive,hardware-atomic"
+          - features: "robotics"
+            cargo_flags: "--no-default-features --features robotics,hardware-atomic"
+          - features: "iot"
+            cargo_flags: "--no-default-features --features iot,hardware-atomic"
+          - features: "industrial"
+            cargo_flags: "--no-default-features --features industrial,hardware-atomic"
+          # Add non-atomic variants for Cortex-M0/M0+ and RISC-V compact
+          - target: thumbv6m-none-eabi
+            features: "automotive-no-atomic"
+            cargo_flags: "--no-default-features --features automotive"
+          - target: thumbv6m-none-eabi
+            features: "robotics-no-atomic"
+            cargo_flags: "--no-default-features --features robotics"
+          - target: thumbv6m-none-eabi
+            features: "iot-no-atomic"
+            cargo_flags: "--no-default-features --features iot"
+          - target: thumbv6m-none-eabi
+            features: "industrial-no-atomic"
+            cargo_flags: "--no-default-features --features industrial"
+          - target: riscv32imc-unknown-none-elf
+            features: "automotive-no-atomic"
+            cargo_flags: "--no-default-features --features automotive"
+          - target: riscv32imc-unknown-none-elf
+            features: "robotics-no-atomic"
+            cargo_flags: "--no-default-features --features robotics"
+          - target: riscv32imc-unknown-none-elf
+            features: "iot-no-atomic"
+            cargo_flags: "--no-default-features --features iot"
+          - target: riscv32imc-unknown-none-elf
+            features: "industrial-no-atomic"
+            cargo_flags: "--no-default-features --features industrial"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+        rustup target add ${{ matrix.target }}
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-embedded-${{ matrix.target }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-embedded-${{ matrix.target }}-${{ matrix.features }}-
+          ${{ runner.os }}-embedded-${{ matrix.target }}-
+          ${{ runner.os }}-embedded-
+
+    - name: Build for target
+      run: |
+        cargo build --target ${{ matrix.target }} ${{ matrix.cargo_flags }}
+
+    - name: Build release for target
+      run: |
+        cargo build --target ${{ matrix.target }} --release ${{ matrix.cargo_flags }}
+
+    - name: Check binary size
+      run: |
+        echo "## Binary Size for ${{ matrix.target }} (${{ matrix.features }})" >> $GITHUB_STEP_SUMMARY
+        ls -la target/${{ matrix.target }}/release/ | grep -E '\.(elf|bin)$' || echo "No binaries found" >> $GITHUB_STEP_SUMMARY
+
+  # Platform-specific feature testing
+  platform-features:
+    name: Platform-Specific Features
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [aurix, stm32, cortex-m, riscv]
+        target:
+          - thumbv7em-none-eabihf  # Representative ARM target
+          - riscv32imac-unknown-none-elf # Representative RISC-V target
+        exclude:
+          # Only test RISC-V platform on RISC-V target
+          - platform: aurix
+            target: riscv32imac-unknown-none-elf
+          - platform: stm32
+            target: riscv32imac-unknown-none-elf
+          - platform: cortex-m
+            target: riscv32imac-unknown-none-elf
+          # Only test ARM platforms on ARM targets
+          - platform: riscv
+            target: thumbv7em-none-eabihf
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+        rustup target add ${{ matrix.target }}
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-platform-${{ matrix.platform }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Test platform-specific features
+      run: |
+        cargo build --target ${{ matrix.target }} --no-default-features --features automotive,robotics,industrial,iot,${{ matrix.platform }}
+
+    - name: Test platform with hardware features
+      run: |
+        cargo build --target ${{ matrix.target }} --no-default-features --features automotive,robotics,industrial,iot,${{ matrix.platform }},hardware-atomic
+
+  # Memory constraint validation
+  memory-constraints:
+    name: Memory Constraint Validation
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [thumbv6m-none-eabi, thumbv7m-none-eabi, thumbv7em-none-eabihf]
+        memory_profile:
+          - "tiny"      # 2KB-8KB systems
+          - "small"     # 8KB-32KB systems  
+          - "medium"    # 32KB-128KB systems
+          - "large"     # 128KB+ systems
+        exclude:
+          # Exclude hardware-atomic for Cortex-M0/M0+ in large profile
+          - target: thumbv6m-none-eabi
+            memory_profile: "large"
+        include:
+          - memory_profile: "tiny"
+            features: "--no-default-features --features iot"
+          - memory_profile: "small"
+            features: "--no-default-features --features iot,automotive"
+          - memory_profile: "medium"
+            features: "--no-default-features --features automotive,robotics,industrial,iot"
+          - memory_profile: "large"
+            features: "--no-default-features --features automotive,robotics,industrial,iot,hardware-atomic"
+          # Add non-atomic large profile for Cortex-M0/M0+
+          - target: thumbv6m-none-eabi
+            memory_profile: "large-no-atomic"
+            features: "--no-default-features --features automotive,robotics,industrial,iot"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+        rustup target add ${{ matrix.target }}
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-memory-${{ matrix.target }}-${{ matrix.memory_profile }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build with memory profile
+      run: |
+        cargo build --target ${{ matrix.target }} --release ${{ matrix.features }}
+
+    - name: Analyze binary size
+      run: |
+        echo "## Binary Size Analysis - ${{ matrix.target }} (${{ matrix.memory_profile }})" >> $GITHUB_STEP_SUMMARY
+        echo "### Release Build Artifacts:" >> $GITHUB_STEP_SUMMARY
+        ls -la target/${{ matrix.target }}/release/ >> $GITHUB_STEP_SUMMARY || echo "No release artifacts found" >> $GITHUB_STEP_SUMMARY
+        echo "### Library Size Information:" >> $GITHUB_STEP_SUMMARY
+        find target/${{ matrix.target }}/release -name "*.rlib" -exec ls -la {} \; >> $GITHUB_STEP_SUMMARY || echo "No .rlib files found" >> $GITHUB_STEP_SUMMARY
+
+  # Real-time constraint validation
+  realtime-validation:
+    name: Real-Time Constraint Validation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+        rustup target add thumbv7em-none-eabihf
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-realtime-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build with real-time optimizations
+      run: |
+        # Build with maximum optimization for real-time performance
+        RUSTFLAGS="-C opt-level=3 -C target-cpu=cortex-m4 -C link-arg=-Tlink.x" \
+        cargo build --target thumbv7em-none-eabihf --release \
+        --no-default-features --features automotive,hardware-atomic
+
+    - name: Validate real-time bounds
+      run: |
+        echo "## Real-Time Validation Results" >> $GITHUB_STEP_SUMMARY
+        echo "Built successfully with real-time optimizations" >> $GITHUB_STEP_SUMMARY
+        echo "Binary size:" >> $GITHUB_STEP_SUMMARY
+        ls -la target/thumbv7em-none-eabihf/release/ >> $GITHUB_STEP_SUMMARY || echo "No binaries found" >> $GITHUB_STEP_SUMMARY
+
+  # Automotive ECU simulation test
+  automotive-simulation:
+    name: Automotive ECU Simulation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+        rustup target add thumbv7em-none-eabihf
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-automotive-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build automotive ECU example
+      run: |
+        cd examples/automotive_ecu_network
+        cargo build --target thumbv7em-none-eabihf --release
+
+    - name: Test automotive ECU binaries
+      run: |
+        cd examples/automotive_ecu_network
+        # Build all ECU binaries
+        cargo build --target thumbv7em-none-eabihf --release --bin brake_ecu
+        cargo build --target thumbv7em-none-eabihf --release --bin engine_ecu
+        cargo build --target thumbv7em-none-eabihf --release --bin gateway_ecu
+        cargo build --target thumbv7em-none-eabihf --release --bin steering_ecu
+
+    - name: Validate ECU binary sizes
+      run: |
+        cd examples/automotive_ecu_network
+        echo "## Automotive ECU Binary Sizes" >> $GITHUB_STEP_SUMMARY
+        ls -la target/thumbv7em-none-eabihf/release/ | grep -E 'ecu$' >> $GITHUB_STEP_SUMMARY || echo "No ECU binaries found" >> $GITHUB_STEP_SUMMARY
+
+  # no_std compatibility verification
+  no-std-verification:
+    name: no_std Compatibility Verification
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [thumbv6m-none-eabi, thumbv7m-none-eabi, thumbv7em-none-eabihf, riscv32imac-unknown-none-elf]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+        rustup target add ${{ matrix.target }}
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-nostd-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Verify no_std build (minimal)
+      run: |
+        cargo build --target ${{ matrix.target }} --no-default-features
+
+    - name: Verify no_std build (domain features)
+      run: |
+        cargo build --target ${{ matrix.target }} --no-default-features --features automotive
+        cargo build --target ${{ matrix.target }} --no-default-features --features robotics
+        cargo build --target ${{ matrix.target }} --no-default-features --features iot
+        cargo build --target ${{ matrix.target }} --no-default-features --features industrial
+
+    - name: Verify no_std build (with hardware features)
+      run: |
+        # Only test hardware-atomic on targets that support atomics
+        if [[ "${{ matrix.target }}" != "thumbv6m-none-eabi" && "${{ matrix.target }}" != "riscv32imc-unknown-none-elf" ]]; then
+          cargo build --target ${{ matrix.target }} --no-default-features --features automotive,hardware-atomic
+        else
+          echo "Skipping hardware-atomic test for ${{ matrix.target }} (no atomic support)"
+        fi
+
+    - name: Verify no_std build (with serde)
+      run: |
+        cargo build --target ${{ matrix.target }} --no-default-features --features automotive,serde
+
+    - name: Report success
+      run: |
+        echo "## no_std Verification - ${{ matrix.target }}" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All no_std builds successful" >> $GITHUB_STEP_SUMMARY

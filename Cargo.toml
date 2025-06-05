@@ -1,0 +1,117 @@
+[package]
+name = "crdtosphere"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Universal embedded CRDTs for distributed coordination across automotive, robotics, IoT, and industrial applications"
+authors = ["Theo M. Bulut"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/vertexclique/crdtosphere"
+homepage = "https://github.com/vertexclique/crdtosphere"
+documentation = "https://docs.rs/crdtosphere"
+readme = "README.md"
+keywords = ["crdt", "embedded", "no-std", "distributed", "automotive", "robotics", "iot"]
+categories = ["embedded", "data-structures", "no-std"]
+
+exclude = [
+    "/art",
+    "/proptest-regressions",
+    "/tests", 
+    "/target",
+    "Makefile",
+    ".*",
+    "*.log",
+    "*.bak",
+    "*.orig"
+]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[features]
+# All features
+all = ["automotive", "robotics", "iot", "industrial", "hardware", "serde"]
+
+# Domain-specific features
+automotive = []
+robotics = []
+iot = []
+industrial = []
+
+# Platform-specific features
+aurix = []
+stm32 = []
+cortex-m = []
+riscv = []
+
+# Hardware optimization features
+hardware = ["hardware-atomic"]
+hardware-atomic = []
+
+# Serialization features
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
+
+[dev-dependencies]
+proptest = "1.4"
+proptest-derive = "0.4"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "crdt_benchmarks"
+harness = false
+
+[[bench]]
+name = "memory_benchmarks"
+harness = false
+
+[[example]]
+name = "atomic_counter"
+required-features = ["hardware-atomic"]
+
+[[example]]
+name = "atomic_pncounter"
+required-features = ["hardware-atomic"]
+
+[[example]]
+name = "atomic_lww_register"
+required-features = ["hardware-atomic"]
+
+[[example]]
+name = "atomic_mv_register"
+required-features = ["hardware-atomic"]
+
+[[example]]
+name = "atomic_gset"
+required-features = ["hardware-atomic"]
+
+[[example]]
+name = "atomic_orset"
+required-features = ["hardware-atomic"]
+
+[[example]]
+name = "atomic_lww_map"
+required-features = ["hardware-atomic"]
+
+[package.metadata."docs.rs"]
+# Core features that work together (no platform conflicts)
+features = [
+    "automotive", "robotics", "iot", "industrial",
+    "hardware-atomic",
+    "serde"
+]
+rustdoc-args = [
+    "--cfg", "docsrs",
+    "--default-theme", "ayu",
+    "--generate-link-to-definition"
+]
+# Show platform-specific code for different targets
+targets = [
+    "x86_64-unknown-linux-gnu",      # Generic/default
+    "thumbv7em-none-eabihf",          # ARM Cortex-M (implies cortex-m/stm32)
+    "riscv32imac-unknown-none-elf"    # RISC-V
+]

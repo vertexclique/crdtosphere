@@ -1,0 +1,54 @@
+# Emergency Brake Scenario
+# Tests emergency response coordination and CRDT propagation
+
+# Emergency Brake Scenario - runs on top of loaded simulation
+# Note: This assumes ECUs are already loaded and running
+
+echo "=== Emergency Brake Scenario ==="
+echo "Testing emergency response coordination via CRDT"
+
+# Start with normal conditions
+echo "Setting initial normal conditions..."
+
+# Normal temperatures initially
+mach set "engine_ecu"
+sysbus WriteDoubleWord 0x50000000 0x4B000000  # 75°C to sensor region
+
+mach set "brake_ecu"
+sysbus WriteDoubleWord 0x50000000 0x42200000  # 40°C to sensor region
+
+mach set "steering_ecu"
+sysbus WriteDoubleWord 0x50000000 0x41C80000  # 35°C to sensor region
+
+mach set "gateway_ecu"
+sysbus WriteDoubleWord 0x50000000 0x41F00000  # 30°C to sensor region
+
+echo "Normal conditions set. Now triggering emergency..."
+
+# Inject critical engine temperature to trigger emergency
+mach set "engine_ecu"
+sysbus WriteDoubleWord 0x50000000 0x42E60000  # 115°C (CRITICAL!) to input region
+sysbus WriteDoubleWord 0x50000100 0x00000001  # Emergency condition to input region
+
+echo "CRITICAL: Engine temperature set to 115°C"
+echo "Expected: Emergency brake activation and propagation"
+
+# Inject emergency brake CAN message
+mach set "brake_ecu"
+sysbus WriteDoubleWord 0x40006400 0x00640100  # Emergency brake command to CAN region
+sysbus WriteDoubleWord 0x40006404 0x00000001  # Message valid flag
+
+echo "Emergency brake command injected"
+echo "Monitoring emergency response propagation..."
+
+# The system should now:
+# 1. Engine ECU detects critical temperature
+# 2. Triggers emergency brake via CRDT coordination
+# 3. Brake ECU activates maximum braking
+# 4. Steering ECU engages stability control
+# 5. Gateway ECU coordinates system-wide emergency response
+# 6. All ECUs increment error counters (G-Counter CRDT)
+# 7. Emergency state propagates via LWW-Register CRDT
+
+echo "Emergency scenario active..."
+echo "Expected: All ECUs coordinate emergency response"

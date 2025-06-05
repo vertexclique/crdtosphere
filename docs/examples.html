@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examples - CRDTosphere</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../art/crdtosphere_logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a8cc',
+                        'primary-dark': '#007799',
+                        secondary: '#ff6b35',
+                        accent: '#6366f1',
+                        'bg-primary': '#f8f9fa',
+                        'bg-secondary': '#e4e4e4',
+                        'bg-tertiary': '#d1d5db',
+                        'text-primary': '#1f2937',
+                        'text-secondary': '#4b5563',
+                        'text-muted': '#6b7280',
+                        'border-color': '#d1d5db',
+                        'code-bg': '#f3f4f6',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-bg-primary/95 backdrop-blur-md border-b border-border-color z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-primary">CRDTosphere</span>
+                </div>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Home</a></li>
+                    <li><a href="getting-started.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Getting Started</a></li>
+                    <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">CRDT Types</a></li>
+                    <li><a href="domains.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Domains</a></li>
+                    <li><a href="examples.html" class="text-primary bg-primary/10 px-3 py-2 rounded-md font-medium">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <!-- Header -->
+            <header class="text-center mb-16">
+                <h1 class="text-5xl font-extrabold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Examples & Tutorials
+                </h1>
+                <p class="text-xl text-text-secondary max-w-3xl mx-auto">
+                    Practical examples and real-world usage patterns for CRDTosphere
+                </p>
+            </header>
+
+            <!-- Example Categories -->
+            <section class="mb-20">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Example Categories</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-bg-secondary p-6 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300 text-center">
+                        <div class="text-3xl mb-4">🚀</div>
+                        <h3 class="text-lg font-semibold mb-3 text-primary">Basic Examples</h3>
+                        <p class="text-text-secondary text-sm mb-4">Simple usage patterns for each CRDT type</p>
+                        <a href="#basic-examples" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                    <div class="bg-bg-secondary p-6 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300 text-center">
+                        <div class="text-3xl mb-4">🔧</div>
+                        <h3 class="text-lg font-semibold mb-3 text-primary">Atomic Operations</h3>
+                        <p class="text-text-secondary text-sm mb-4">Multi-threaded examples with hardware atomic support</p>
+                        <a href="#atomic-examples" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                    <div class="bg-bg-secondary p-6 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300 text-center">
+                        <div class="text-3xl mb-4">🌐</div>
+                        <h3 class="text-lg font-semibold mb-3 text-primary">Domain Applications</h3>
+                        <p class="text-text-secondary text-sm mb-4">Real-world examples for automotive, robotics, IoT, and industrial</p>
+                        <a href="#domain-examples" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                    <div class="bg-bg-secondary p-6 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300 text-center">
+                        <div class="text-3xl mb-4">🏗️</div>
+                        <h3 class="text-lg font-semibold mb-3 text-primary">Advanced Patterns</h3>
+                        <p class="text-text-secondary text-sm mb-4">Complex scenarios and integration patterns</p>
+                        <a href="#advanced-examples" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Basic Examples -->
+            <section id="basic-examples" class="mb-20">
+                <h2 class="text-3xl font-bold mb-12 text-text-primary">Basic Examples</h2>
+                
+                <div class="space-y-12">
+                    <!-- Distributed Event Counter -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Distributed Event Counter</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">Basic</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Track events across multiple nodes with a grow-only counter.</p>
+                        
+                        <div class="space-y-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Create counters on different nodes
+    let mut node1_counter = GCounter::&lt;DefaultConfig&gt;::new(1);
+    let mut node2_counter = GCounter::&lt;DefaultConfig&gt;::new(2);
+    
+    // Each node tracks local events
+    node1_counter.increment()?; // Page view
+    node1_counter.increment()?; // Button click
+    
+    node2_counter.increment()?; // API call
+    node2_counter.increment()?; // User action
+    node2_counter.increment()?; // Background task
+    
+    println!("Node 1 events: {}", node1_counter.value());
+    println!("Node 2 events: {}", node2_counter.value());
+    
+    // Merge counters to get total events
+    node1_counter.merge(&node2_counter)?;
+    println!("Total events: {}", node1_counter.value());
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Node 1 events: 2
+Node 2 events: 3
+Total events: 5</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Management -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Configuration Management</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">Basic</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Manage distributed configuration with last-writer-wins semantics.</p>
+                        
+                        <div class="space-y-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Configuration registers on different services
+    let mut service1_config = LWWRegister::&lt;String, DefaultConfig&gt;::new(1);
+    let mut service2_config = LWWRegister::&lt;String, DefaultConfig&gt;::new(2);
+    
+    // Service 1 sets initial configuration
+    service1_config.set("debug_mode=false".to_string(), 1000)?;
+    
+    // Service 2 updates configuration later
+    service2_config.set("debug_mode=true".to_string(), 2000)?;
+    
+    // Merge configurations - latest timestamp wins
+    service1_config.merge(&service2_config)?;
+    
+    if let Some(config) = service1_config.get() {
+        println!("Current config: {}", config);
+    }
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Current config: debug_mode=true</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device Capability Registry -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Device Capability Registry</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">Basic</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Track device capabilities using a grow-only set.</p>
+                        
+                        <div class="space-y-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum Capability {
+    WiFi,
+    Bluetooth,
+    GPS,
+    Camera,
+    Accelerometer,
+}
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Device capability sets
+    let mut mobile_device = GSet::&lt;Capability, DefaultConfig&gt;::new();
+    let mut iot_device = GSet::&lt;Capability, DefaultConfig&gt;::new();
+    
+    // Mobile device capabilities
+    mobile_device.insert(Capability::WiFi)?;
+    mobile_device.insert(Capability::Bluetooth)?;
+    mobile_device.insert(Capability::GPS)?;
+    mobile_device.insert(Capability::Camera)?;
+    
+    // IoT device capabilities
+    iot_device.insert(Capability::WiFi)?;
+    iot_device.insert(Capability::Accelerometer)?;
+    
+    // Check capabilities
+    println!("Mobile has GPS: {}", mobile_device.contains(&Capability::GPS));
+    println!("IoT has GPS: {}", iot_device.contains(&Capability::GPS));
+    
+    // Merge to get all capabilities in network
+    mobile_device.merge(&iot_device)?;
+    println!("Total capabilities: {}", mobile_device.len());
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Mobile has GPS: true
+IoT has GPS: false
+Total capabilities: 5</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Atomic Examples -->
+            <section id="atomic-examples" class="mb-20">
+                <h2 class="text-3xl font-bold mb-12 text-text-primary">Atomic Operations</h2>
+                
+                <div class="space-y-12">
+                    <!-- Concurrent Device Registration -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Concurrent Device Registration</h3>
+                            <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">Atomic</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Multiple threads registering device capabilities concurrently.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = { version = "0.1.0", features = ["hardware-atomic"] }</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+use std::sync::Arc;
+use std::thread;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Shared capability registry
+    let capabilities = Arc::new(GSet::&lt;u32, DefaultConfig&gt;::new());
+    
+    let mut handles = vec![];
+    
+    // Spawn multiple discovery threads
+    for thread_id in 0..4 {
+        let caps = Arc::clone(&capabilities);
+        
+        let handle = thread::spawn(move || {
+            // Each thread discovers different capabilities
+            let capability = match thread_id {
+                0 => 1, // GPS
+                1 => 2, // WiFi
+                2 => 3, // Bluetooth
+                3 => 4, // Camera
+                _ => unreachable!(),
+            };
+            
+            // Thread-safe insertion
+            caps.insert(capability).unwrap();
+            println!("Thread {} registered capability {}", thread_id, capability);
+        });
+        
+        handles.push(handle);
+    }
+    
+    // Wait for all threads
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    
+    println!("Total capabilities discovered: {}", capabilities.len());
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Thread 0 registered capability 1
+Thread 1 registered capability 2
+Thread 2 registered capability 3
+Thread 3 registered capability 4
+Total capabilities discovered: 4</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Core Sensor Processing -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Multi-Core Sensor Processing</h3>
+                            <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">Atomic</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Process sensor data across multiple CPU cores with atomic coordination.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = { version = "0.1.0", features = ["hardware-atomic"] }</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+use std::sync::Arc;
+use std::thread;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+fn get_timestamp() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
+}
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Shared sensor data register
+    let sensor_data = Arc::new(LWWRegister::&lt;f32, DefaultConfig&gt;::new(1));
+    
+    let mut handles = vec![];
+    
+    // Multiple sensor processing cores
+    for core_id in 0..3 {
+        let data = Arc::clone(&sensor_data);
+        
+        let handle = thread::spawn(move || {
+            // Simulate sensor reading processing
+            let reading = match core_id {
+                0 => 25.5, // Temperature sensor
+                1 => 60.2, // Humidity sensor  
+                2 => 24.8, // Backup temperature
+                _ => unreachable!(),
+            };
+            
+            // Atomic update with timestamp
+            let timestamp = get_timestamp() + core_id * 10;
+            data.set(reading, timestamp).unwrap();
+            
+            println!("Core {} processed reading: {}", core_id, reading);
+        });
+        
+        handles.push(handle);
+    }
+    
+    // Wait for processing
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    
+    if let Some(final_reading) = sensor_data.get() {
+        println!("Final sensor value: {}", final_reading);
+    }
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Core 0 processed reading: 25.5
+Core 1 processed reading: 60.2
+Core 2 processed reading: 24.8
+Final sensor value: 24.8</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Domain Examples -->
+            <section id="domain-examples" class="mb-20">
+                <h2 class="text-3xl font-bold mb-12 text-text-primary">Domain Applications</h2>
+                
+                <div class="space-y-12">
+                    <!-- Automotive Sensor Fusion -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Automotive Sensor Fusion</h3>
+                            <span class="bg-secondary/20 text-secondary px-3 py-1 rounded-full text-sm font-medium">Automotive</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Combine data from multiple automotive sensors with safety prioritization.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = { version = "0.1.0", features = ["automotive"] }</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+// Simulated automotive types
+#[derive(Debug, Clone, PartialEq)]
+enum BrakeStatus { Engaged, Released }
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Safety-critical brake system data
+    let mut brake_ecu1 = LWWRegister::&lt;BrakeStatus, DefaultConfig&gt;::new(1);
+    let mut brake_ecu2 = LWWRegister::&lt;BrakeStatus, DefaultConfig&gt;::new(2);
+    
+    // ECU 1 detects brake engagement (ASIL-D critical)
+    brake_ecu1.set(BrakeStatus::Engaged, 1000)?;
+    
+    // ECU 2 has conflicting reading (lower priority)
+    brake_ecu2.set(BrakeStatus::Released, 1001)?;
+    
+    // Merge with safety prioritization (latest wins)
+    brake_ecu1.merge(&brake_ecu2)?;
+    
+    if let Some(status) = brake_ecu1.get() {
+        println!("Final brake status: {:?}", status);
+        
+        // Safety check
+        match status {
+            BrakeStatus::Engaged => println!("✓ Safety system active"),
+            BrakeStatus::Released => println!("⚠ Brake system released"),
+        }
+    }
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Final brake status: Released
+⚠ Brake system released</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IoT Sensor Network -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">IoT Sensor Network</h3>
+                            <span class="bg-secondary/20 text-secondary px-3 py-1 rounded-full text-sm font-medium">IoT</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Collect and aggregate data from distributed IoT sensors.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = { version = "0.1.0", features = ["iot"] }</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum SensorType { Temperature, Humidity, Pressure }
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Sensor readings from different nodes
+    let mut node1_readings = LWWMap::&lt;SensorType, f32, DefaultConfig&gt;::new();
+    let mut node2_readings = LWWMap::&lt;SensorType, f32, DefaultConfig&gt;::new();
+    
+    // Node 1 sensor readings
+    node1_readings.insert(SensorType::Temperature, 25.5, 1000)?;
+    node1_readings.insert(SensorType::Humidity, 60.0, 1001)?;
+    
+    // Node 2 sensor readings (some overlap)
+    node2_readings.insert(SensorType::Temperature, 26.1, 1002)?; // Newer
+    node2_readings.insert(SensorType::Pressure, 1013.25, 1003)?;
+    
+    // Merge sensor data
+    node1_readings.merge(&node2_readings)?;
+    
+    println!("Aggregated sensor data:");
+    if let Some(temp) = node1_readings.get(&SensorType::Temperature) {
+        println!("Temperature: {}°C", temp);
+    }
+    if let Some(humidity) = node1_readings.get(&SensorType::Humidity) {
+        println!("Humidity: {}%", humidity);
+    }
+    if let Some(pressure) = node1_readings.get(&SensorType::Pressure) {
+        println!("Pressure: {} hPa", pressure);
+    }
+    
+    println!("Total sensor types: {}", node1_readings.len());
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Aggregated sensor data:
+Temperature: 26.1°C
+Humidity: 60%
+Pressure: 1013.25 hPa
+Total sensor types: 3</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Advanced Examples -->
+            <section id="advanced-examples" class="mb-20">
+                <h2 class="text-3xl font-bold mb-12 text-text-primary">Advanced Patterns</h2>
+                
+                <div class="space-y-12">
+                    <!-- Multi-Value Conflict Resolution -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Multi-Value Conflict Resolution</h3>
+                            <span class="bg-accent/20 text-accent px-3 py-1 rounded-full text-sm font-medium">Advanced</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Handle concurrent updates with application-level conflict resolution.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Multi-value register for sensor calibration
+    let mut calibration1 = MVRegister::&lt;f32, DefaultConfig&gt;::new(1);
+    let mut calibration2 = MVRegister::&lt;f32, DefaultConfig&gt;::new(2);
+    let mut calibration3 = MVRegister::&lt;f32, DefaultConfig&gt;::new(3);
+    
+    // Concurrent calibration updates
+    calibration1.set(1.05, 1000)?; // Node 1 calibration
+    calibration2.set(1.03, 1000)?; // Node 2 calibration (same timestamp)
+    calibration3.set(1.07, 1000)?; // Node 3 calibration (same timestamp)
+    
+    // Merge all calibrations
+    calibration1.merge(&calibration2)?;
+    calibration1.merge(&calibration3)?;
+    
+    // Get all concurrent values
+    let values: Vec&lt;f32&gt; = calibration1.values().cloned().collect();
+    println!("Concurrent calibration values: {:?}", values);
+    
+    // Application-level conflict resolution: use average
+    let average = values.iter().sum::&lt;f32&gt;() / values.len() as f32;
+    println!("Resolved calibration (average): {:.3}", average);
+    
+    // Alternative: use median
+    let mut sorted_values = values.clone();
+    sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let median = sorted_values[sorted_values.len() / 2];
+    println!("Resolved calibration (median): {:.3}", median);
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Concurrent calibration values: [1.05, 1.03, 1.07]
+Resolved calibration (average): 1.050
+Resolved calibration (median): 1.050</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Running Examples -->
+            <section class="mb-20">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Running the Examples</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">📦 Clone the Repository</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                            <pre><code class="language-bash">git clone https://github.com/vertexclique/crdtosphere.git
+cd crdtosphere</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">🚀 Run Basic Examples</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                            <pre><code class="language-bash"># Run basic counter example
+cargo run --example basic_counter
+
+# Run configuration management example
+cargo run --example config_management
+
+# Run device registry example
+cargo run --example device_registry</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">🔧 Run Atomic Examples</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                            <pre><code class="language-bash"># Run atomic examples with hardware-atomic feature
+cargo run --example atomic_gset --features hardware-atomic
+cargo run --example atomic_counter --features hardware-atomic
+cargo run --example atomic_lww_register --features hardware-atomic</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">🌐 Run Domain Examples</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                            <pre><code class="language-bash"># Run automotive examples
+cargo run --example automotive_sensor_fusion --features automotive
+
+# Run robotics examples
+cargo run --example robot_swarm --features robotics
+
+# Run IoT examples
+cargo run --example iot_sensor_network --features iot</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Next Steps</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">📚</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Learn CRDT Types</h3>
+                        <p class="text-text-secondary mb-6">Explore the different CRDT types available and learn when to use each one.</p>
+                        <a href="crdt-types.html" class="text-primary hover:text-secondary font-semibold">View CRDT Types →</a>
+                    </div>
+                    
+                    
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">🌐</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Domain Applications</h3>
+                        <p class="text-text-secondary mb-6">Explore specialized CRDTs for different industries.</p>
+                        <a href="domains.html" class="text-primary hover:text-secondary font-semibold">Explore Domains →</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-bg-secondary border-t border-border-color py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Documentation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="getting-started.html" class="text-text-secondary hover:text-primary transition-colors">Getting Started</a></li>
+                        <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary transition-colors">CRDT Types</a></li>
+                        <li><a href="examples.html" class="text-text-secondary hover:text-primary transition-colors">Examples</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Features</h4>
+                    <ul class="space-y-2">
+                        <li><a href="domains.html" class="text-text-secondary hover:text-primary transition-colors">Domain Applications</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Community</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com/vertexclique/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">GitHub</a></li>
+                        <li><a href="https://crates.io/crates/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">Crates.io</a></li>
+                        <li><a href="https://docs.rs/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">docs.rs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center pt-8 border-t border-border-color">
+                <p class="text-text-muted">&copy; 2025 CRDTosphere. Built with ❤️ for embedded systems by vertexclique.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

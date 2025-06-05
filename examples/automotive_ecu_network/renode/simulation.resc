@@ -1,0 +1,146 @@
+# Renode Simulation Script for Automotive ECU Network
+# Simplified script compatible with memory-mapped platform
+
+# Create Engine ECU (ASIL-D)
+mach create "engine_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+
+# Load Engine ECU firmware
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/engine_ecu
+
+# Create Brake ECU (ASIL-D)
+mach create "brake_ecu" 
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+
+# Load Brake ECU firmware
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/brake_ecu
+
+# Create Steering ECU (ASIL-C)
+mach create "steering_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+
+# Load Steering ECU firmware
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/steering_ecu
+
+# Create Gateway ECU (ASIL-B)
+mach create "gateway_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+
+# Load Gateway ECU firmware
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/gateway_ecu
+
+# Configure simulation parameters
+emulation SetGlobalQuantum "0.00001"  # 10μs quantum for real-time simulation
+emulation SetGlobalSerialExecution true
+
+# Start all ECUs immediately
+echo "Starting Normal Operation Scenario"
+
+# Start all ECUs
+mach set "engine_ecu"
+start
+
+mach set "brake_ecu"
+start
+
+mach set "steering_ecu"
+start
+
+mach set "gateway_ecu"
+start
+
+echo "All ECUs started - Normal operation in progress"
+echo "ECUs are running with memory-mapped CAN simulation"
+
+# Display available commands
+echo ""
+echo "=== Automotive ECU Network Simulation ==="
+echo ""
+echo "Available scenarios:"
+echo "  start_normal_operation     - Start normal ECU operation"
+echo "  sensor_simulation          - Write sensor data to memory"
+echo "  can_simulation             - Write CAN messages to memory"
+echo "  emergency_brake_scenario   - Trigger emergency brake test"
+echo "  memory_inspection          - Inspect ECU memory states"
+echo "  ecu_failure_scenario       - Test ECU failure handling"
+echo ""
+echo "Monitoring commands:"
+echo "  emulation RunFor \"1.0\"     - Run simulation for 1 second"
+echo "  pause                      - Pause simulation"
+echo "  start                      - Resume simulation"
+echo "  reset                      - Reset all ECUs"
+echo ""
+echo "Note: This simulation uses memory-mapped regions to simulate"
+echo "      CAN communication and sensor data exchange."
+echo ""
+echo "To start: run 'start_normal_operation'"
+echo ""
+
+echo "Simulation loaded."
+
+# Define CRDT state dump macro
+macro crdt_state_dump
+"""
+    echo "=== CRDT State Dump ==="
+    echo ""
+    
+    # Engine ECU CRDT State
+    mach set "engine_ecu"
+    echo "Engine ECU:"
+    echo "  Temperature: "
+    sysbus ReadDoubleWord 0x50000000
+    echo "  Error Count: "
+    sysbus ReadDoubleWord 0x50000008
+    echo "  Config Time: "
+    sysbus ReadDoubleWord 0x50000010
+    echo "  CAN Buffer: "
+    sysbus ReadDoubleWord 0x40006400
+    echo ""
+    
+    # Brake ECU CRDT State  
+    mach set "brake_ecu"
+    echo "Brake ECU:"
+    echo "  Temperature: "
+    sysbus ReadDoubleWord 0x50000000
+    echo "  Error Count: "
+    sysbus ReadDoubleWord 0x50000008
+    echo "  Emergency State: "
+    sysbus ReadDoubleWord 0x40006400
+    echo "  Emergency Flag: "
+    sysbus ReadDoubleWord 0x40006404
+    echo ""
+    
+    # Steering ECU CRDT State
+    mach set "steering_ecu" 
+    echo "Steering ECU:"
+    echo "  Temperature: "
+    sysbus ReadDoubleWord 0x50000000
+    echo "  Error Count: "
+    sysbus ReadDoubleWord 0x50000008
+    echo "  CAN Buffer: "
+    sysbus ReadDoubleWord 0x40006400
+    echo ""
+    
+    # Gateway ECU CRDT State
+    mach set "gateway_ecu"
+    echo "Gateway ECU:"
+    echo "  Temperature: "
+    sysbus ReadDoubleWord 0x50000000
+    echo "  Health Score: "
+    sysbus ReadDoubleWord 0x50000008
+    echo "  Routing Count: "
+    sysbus ReadDoubleWord 0x50000010
+    echo "  CAN Buffer: "
+    sysbus ReadDoubleWord 0x40006400
+    echo ""
+    
+    echo "=== End CRDT State Dump ==="
+"""
+
+echo ""
+echo "Additional commands available:"
+echo "  crdt_state_dump            - Dump current CRDT states from all ECUs"

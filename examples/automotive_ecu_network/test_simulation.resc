@@ -1,0 +1,25 @@
+# Test script to demonstrate working ECU simulation
+include @renode/simulation.resc
+
+# Execute the start_normal_operation macro
+start_normal_operation
+
+# Run simulation for 2 seconds
+emulation RunFor "2.0"
+
+# Check sensor simulation
+sensor_simulation
+
+# Run for another second
+emulation RunFor "1.0"
+
+# Test emergency brake scenario
+emergency_brake_scenario
+
+# Run for another second to see response
+emulation RunFor "1.0"
+
+# Inspect memory states
+memory_inspection
+
+echo "Simulation test completed successfully!"

@@ -1,0 +1,53 @@
+[package]
+name = "automotive_ecu_network"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crdtosphere = { path = "../..", features = ["automotive", "hardware", "stm32"] }
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+embedded-hal = "0.2"
+nb = "1.0"
+panic-halt = "0.2"
+heapless = "0.8"
+linked_list_allocator = "0.10"
+
+# STM32F4 specific dependencies
+stm32f4xx-hal = { version = "0.19", features = ["stm32f407", "rt"] }
+bxcan = "0.7"
+
+# Embedded utilities
+embedded-time = "0.12"
+rtic = { version = "2.0", features = ["thumbv7-backend"] }
+
+[profile.dev]
+debug = true
+opt-level = 1
+lto = false
+
+[profile.release]
+debug = true
+lto = false
+opt-level = 2
+codegen-units = 1
+
+[[bin]]
+name = "engine_ecu"
+path = "src/bin/engine_ecu.rs"
+
+[[bin]]
+name = "brake_ecu"
+path = "src/bin/brake_ecu.rs"
+
+[[bin]]
+name = "steering_ecu"
+path = "src/bin/steering_ecu.rs"
+
+[[bin]]
+name = "gateway_ecu"
+path = "src/bin/gateway_ecu.rs"
+
+[[bin]]
+name = "simple_test"
+path = "src/bin/simple_test.rs"

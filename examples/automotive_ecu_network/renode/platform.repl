@@ -1,0 +1,78 @@
+// Renode Platform Definition for Automotive ECU Network
+// Minimal platform for maximum compatibility
+
+// CPU definition
+cpu: CPU.CortexM @ sysbus
+    cpuType: "cortex-m4f"
+    nvic: nvic
+
+nvic: IRQControllers.NVIC @ sysbus 0xE000E000
+    -> cpu@0
+
+// Memory configuration for automotive ECU
+flash: Memory.MappedMemory @ sysbus 0x08000000
+    size: 0x100000  // 1MB Flash
+
+sram: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x30000   // 192KB SRAM
+
+// Boot ROM region where binaries are loaded
+bootrom: Memory.MappedMemory @ sysbus 0x10000
+    size: 0x1000   // 4KB boot ROM
+
+// CAN controllers simulated as memory-mapped regions
+can1_region: Memory.MappedMemory @ sysbus 0x40006000
+    size: 0x1000   // 4KB aligned
+
+can2_region: Memory.MappedMemory @ sysbus 0x40007000
+    size: 0x1000   // 4KB aligned
+
+// UART simulated as memory-mapped region
+uart1_region: Memory.MappedMemory @ sysbus 0x40011000
+    size: 0x1000   // 4KB aligned
+
+// GPIO simulated as memory-mapped regions
+gpioPortA_region: Memory.MappedMemory @ sysbus 0x40020000
+    size: 0x1000   // 4KB aligned
+
+gpioPortB_region: Memory.MappedMemory @ sysbus 0x40021000
+    size: 0x1000   // 4KB aligned
+
+gpioPortC_region: Memory.MappedMemory @ sysbus 0x40022000
+    size: 0x1000   // 4KB aligned
+
+// Timer simulated as memory-mapped region
+timer2_region: Memory.MappedMemory @ sysbus 0x40000000
+    size: 0x1000   // 4KB aligned
+
+// CRDT Input/Output Memory Regions (4KB aligned for Renode compatibility)
+// Combined input region for all CRDT inputs
+crdtInputRegion: Memory.MappedMemory @ sysbus 0x50000000
+    size: 0x1000   // 4KB for all inputs
+    // 0x50000000: Temperature input (4 bytes)
+    // 0x50000100: Emergency condition input (4 bytes)
+    // 0x50000200: Configuration input (4 bytes)
+    // 0x50000300: Error condition input (4 bytes)
+
+// Combined output region for all CRDT outputs
+crdtOutputRegion: Memory.MappedMemory @ sysbus 0x50001000
+    size: 0x1000   // 4KB for all outputs
+    // 0x50001000: Fused temperature result (4 bytes)
+    // 0x50001100: Emergency state result (8 bytes)
+    // 0x50001200: Current configuration (8 bytes)
+    // 0x50001300: Error count result (4 bytes)
+
+// CAN communication regions (4KB aligned)
+canTxRegion: Memory.MappedMemory @ sysbus 0x50002000
+    size: 0x1000   // 4KB for outgoing CRDT messages
+
+canRxRegion: Memory.MappedMemory @ sysbus 0x50003000
+    size: 0x1000   // 4KB for incoming CRDT messages
+
+// Automotive-specific configuration
+sysbus:
+    init:
+        // Configure automotive-specific memory regions
+        Tag <0x08000000, 0x080FFFFF> "ECU_FLASH" 0x3
+        Tag <0x20000000, 0x2002FFFF> "ECU_SRAM" 0x4
+        Tag <0x50000000, 0x50003FFF> "CRDT_DATA" 0x5

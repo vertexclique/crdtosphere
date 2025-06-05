@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRDTosphere - Conflict-free Replicated Data Types for Embedded Systems</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../art/crdtosphere_logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a8cc',
+                        'primary-dark': '#007799',
+                        secondary: '#ff6b35',
+                        accent: '#6366f1',
+                        'bg-primary': '#f8f9fa',
+                        'bg-secondary': '#e4e4e4',
+                        'bg-tertiary': '#d1d5db',
+                        'text-primary': '#1f2937',
+                        'text-secondary': '#4b5563',
+                        'text-muted': '#6b7280',
+                        'border-color': '#d1d5db',
+                        'code-bg': '#f3f4f6',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'gradient': 'gradient 15s ease infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%': { 
+                                boxShadow: '0 0 20px #00a8cc, 0 0 40px #00a8cc, 0 0 60px #00a8cc',
+                                filter: 'drop-shadow(0 0 20px #00a8cc)',
+                            },
+                            '100%': { 
+                                boxShadow: '0 0 40px #ff6b35, 0 0 80px #ff6b35, 0 0 120px #ff6b35',
+                                filter: 'drop-shadow(0 0 30px #ff6b35)',
+                            },
+                        },
+                        gradient: {
+                            '0%, 100%': {
+                                backgroundPosition: '0% 50%'
+                            },
+                            '50%': {
+                                backgroundPosition: '100% 50%'
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .logo-glow {
+            filter: drop-shadow(0 0 20px #00a8cc);
+            animation: breathe 3s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-glow:hover {
+            transform: scale(1.02);
+            animation-play-state: paused;
+            filter: drop-shadow(0 0 30px #00a8cc) drop-shadow(0 0 50px #00a8cc);
+        }
+        
+        @keyframes breathe {
+            0%, 100% {
+                filter: drop-shadow(0 0 15px #00a8cc);
+            }
+            50% {
+                filter: drop-shadow(0 0 35px #00a8cc) drop-shadow(0 0 60px #00a8cc);
+            }
+        }
+    </style>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-bg-primary/95 backdrop-blur-md border-b border-border-color z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-primary">CRDTosphere</span>
+                </div>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="text-primary bg-primary/10 px-3 py-2 rounded-md font-medium">Home</a></li>
+                    <li><a href="getting-started.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Getting Started</a></li>
+                    <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">CRDT Types</a></li>
+                    <li><a href="domains.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Domains</a></li>
+                    <li><a href="examples.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="pt-24 pb-16 px-6 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-bg-primary to-bg-secondary"></div>
+        <div class="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent"></div>
+        <div class="max-w-4xl mx-auto relative z-10">
+            <img src="https://github.com/vertexclique/crdtosphere/raw/master/art/crdtosphere_logo_banner.png" alt="CRDTosphere Banner" class="logo-glow max-w-2xl w-full h-auto mx-auto mb-8 drop-shadow-2xl">
+            <h1 class="text-6xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                CRDTosphere
+            </h1>
+            <p class="text-xl md:text-2xl text-text-secondary mb-6 font-semibold">
+                Conflict-free Replicated Data Types for Embedded Systems
+            </p>
+            <p class="text-lg text-text-secondary max-w-3xl mx-auto mb-12 leading-relaxed">
+                A comprehensive Rust library providing memory-efficient, real-time CRDTs designed specifically 
+                for safety-critical embedded systems in automotive, robotics, IoT, and industrial domains.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="getting-started.html" class="bg-gradient-to-r from-primary to-primary-dark text-bg-primary px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+                    Get Started
+                </a>
+                <a href="examples.html" class="border-2 border-primary text-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary hover:text-bg-primary hover:-translate-y-1 transition-all duration-200">
+                    View Examples
+                </a>
+                <a href="https://github.com/vertexclique/crdtosphere" target="_blank" rel="noopener noreferrer" class="bg-gradient-to-r from-text-primary to-text-secondary text-bg-primary px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-bg-secondary">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16 text-text-primary">Why CRDTosphere?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🚀</div>
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Zero Allocation</h3>
+                    <p class="text-text-secondary leading-relaxed">Fixed-size arrays and compile-time memory allocation for predictable embedded systems performance.</p>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">⚡</div>
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Real-Time Ready</h3>
+                    <p class="text-text-secondary leading-relaxed">Bounded execution times and deterministic operations suitable for hard real-time constraints.</p>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🔒</div>
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Safety Critical</h3>
+                    <p class="text-text-secondary leading-relaxed">ASIL-compliant implementations with comprehensive validation and error handling.</p>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🔧</div>
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Hardware Atomic</h3>
+                    <p class="text-text-secondary leading-relaxed">Lock-free concurrent operations using hardware atomic primitives for multi-core systems.</p>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🌐</div>
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Domain Specific</h3>
+                    <p class="text-text-secondary leading-relaxed">Specialized CRDTs for automotive, robotics, IoT, and industrial automation use cases.</p>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">📊</div>
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Memory Bounded</h3>
+                    <p class="text-text-secondary leading-relaxed">Configurable memory limits with compile-time validation and runtime monitoring.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CRDT Types Overview -->
+    <section class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16 text-text-primary">CRDT Types Available</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary text-center">Counters</h3>
+                    <div class="space-y-4">
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">GCounter</h4>
+                            <p class="text-sm text-text-secondary">Grow-only counter for increment operations</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">PNCounter</h4>
+                            <p class="text-sm text-text-secondary">Increment/decrement counter with dual arrays</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary text-center">Registers</h3>
+                    <div class="space-y-4">
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">LWWRegister</h4>
+                            <p class="text-sm text-text-secondary">Last-writer-wins register with timestamps</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">MVRegister</h4>
+                            <p class="text-sm text-text-secondary">Multi-value register for concurrent updates</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary text-center">Sets</h3>
+                    <div class="space-y-4">
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">GSet</h4>
+                            <p class="text-sm text-text-secondary">Grow-only set for add-only operations</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">ORSet</h4>
+                            <p class="text-sm text-text-secondary">Observed-remove set with add/remove support</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary text-center">Maps</h3>
+                    <div class="space-y-4">
+                        <div class="bg-bg-tertiary p-4 rounded-md border-l-4 border-primary">
+                            <h4 class="font-semibold text-text-primary mb-1">LWWMap</h4>
+                            <p class="text-sm text-text-secondary">Last-writer-wins map for key-value storage</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Domain Applications -->
+    <section class="py-20 bg-bg-secondary">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16 text-text-primary">Domain-Specific Applications</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-secondary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🚗</div>
+                    <h3 class="text-xl font-semibold mb-4 text-secondary">Automotive</h3>
+                    <p class="text-text-secondary mb-6 leading-relaxed">Safety-critical sensor fusion, ASIL-compliant data structures, and real-time vehicle coordination.</p>
+                    <a href="domains.html#automotive" class="text-secondary hover:text-primary font-semibold">Learn More →</a>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-secondary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🤖</div>
+                    <h3 class="text-xl font-semibold mb-4 text-secondary">Robotics</h3>
+                    <p class="text-text-secondary mb-6 leading-relaxed">Multi-robot coordination, shared mapping, status synchronization, and signal coordination.</p>
+                    <a href="domains.html#robotics" class="text-secondary hover:text-primary font-semibold">Learn More →</a>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-secondary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🌐</div>
+                    <h3 class="text-xl font-semibold mb-4 text-secondary">IoT</h3>
+                    <p class="text-text-secondary mb-6 leading-relaxed">Device registries, sensor networks, distributed data collection, and edge computing.</p>
+                    <a href="domains.html#iot" class="text-secondary hover:text-primary font-semibold">Learn More →</a>
+                </div>
+                <div class="bg-bg-tertiary p-8 rounded-xl border border-border-color hover:border-secondary hover:-translate-y-2 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-6">🏭</div>
+                    <h3 class="text-xl font-semibold mb-4 text-secondary">Industrial</h3>
+                    <p class="text-text-secondary mb-6 leading-relaxed">Equipment monitoring, process control, maintenance scheduling, and factory automation.</p>
+                    <a href="domains.html#industrial" class="text-secondary hover:text-primary font-semibold">Learn More →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section class="py-20">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16 text-text-primary">Quick Start</h2>
+            
+            <div class="space-y-8">
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Add to your Cargo.toml</h3>
+                    <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"
+
+# Enable hardware atomic support for multi-core systems
+[features]
+hardware-atomic = ["crdtosphere/hardware-atomic"]</code></pre>
+                </div>
+
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Basic Usage</h3>
+                    <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+// Create a grow-only counter
+let mut counter = GCounter::&lt;DefaultConfig&gt;::new(1);
+counter.increment()?;
+assert_eq!(counter.value(), 1);
+
+// Create a last-writer-wins register
+let mut register = LWWRegister::&lt;i32, DefaultConfig&gt;::new(1);
+register.set(42, 1000)?;
+assert_eq!(register.get(), Some(&42));</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-bg-secondary border-t border-border-color py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Documentation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="getting-started.html" class="text-text-secondary hover:text-primary transition-colors">Getting Started</a></li>
+                        <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary transition-colors">CRDT Types</a></li>
+                        <li><a href="examples.html" class="text-text-secondary hover:text-primary transition-colors">Examples</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Features</h4>
+                    <ul class="space-y-2">
+                        <li><a href="domains.html" class="text-text-secondary hover:text-primary transition-colors">Domain Applications</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Community</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com/vertexclique/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">GitHub</a></li>
+                        <li><a href="https://crates.io/crates/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">Crates.io</a></li>
+                        <li><a href="https://docs.rs/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">docs.rs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center pt-8 border-t border-border-color">
+                <p class="text-text-muted">&copy; 2025 CRDTosphere. Built with ❤️ for embedded systems by vertexclique.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

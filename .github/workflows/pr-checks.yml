@@ -1,0 +1,562 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Basic compilation and formatting checks
+  format-and-lint:
+    name: Format and Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+    
+    - name: Run clippy (all features)
+      run: cargo clippy --all-targets --all-features -- -D warnings
+    
+    - name: Run clippy (no_std)
+      run: cargo clippy --all-targets --no-default-features -- -D warnings
+    
+    - name: Run clippy (hardware-atomic)
+      run: cargo clippy --all-targets --no-default-features --features hardware-atomic -- -D warnings
+
+  # Core functionality tests
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, nightly]
+        features: 
+          - name: "default"
+            flags: ""
+          - name: "all-features"
+            flags: "--all-features"
+          - name: "no-default"
+            flags: "--no-default-features"
+          - name: "hardware-atomic"
+            flags: "--no-default-features --features hardware-atomic"
+          - name: "serde"
+            flags: "--no-default-features --features serde"
+          - name: "automotive"
+            flags: "--no-default-features --features automotive"
+          - name: "robotics"
+            flags: "--no-default-features --features robotics"
+          - name: "iot"
+            flags: "--no-default-features --features iot"
+          - name: "industrial"
+            flags: "--no-default-features --features industrial"
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.features.name }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.rust }}-cargo-
+    
+    - name: Run tests (${{ matrix.features.name }})
+      run: cargo test --verbose ${{ matrix.features.flags }}
+    
+    - name: Run doc tests (${{ matrix.features.name }})
+      run: cargo test --doc ${{ matrix.features.flags }}
+
+  # Property-based testing
+  property-tests:
+    name: Property Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features:
+          - name: "standard"
+            flags: "--all-features"
+          - name: "hardware-atomic"
+            flags: "--no-default-features --features hardware-atomic"
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-property-${{ matrix.features.name }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-property-cargo-
+    
+    - name: Run property tests (${{ matrix.features.name }})
+      run: cargo test test_all_property_tests --release ${{ matrix.features.flags }} -- --nocapture
+
+  # Performance benchmarks
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-bench-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bench-cargo-
+    
+    - name: Test benchmarks compile
+      run: cargo bench --no-run
+    
+    - name: Run benchmark tests
+      run: |
+        cargo bench --bench crdt_benchmarks -- --test
+        cargo bench --bench memory_benchmarks -- --test
+
+  # Cross-platform compatibility
+  cross-platform:
+    name: Cross Platform
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        features:
+          - name: "default"
+            flags: ""
+          - name: "all-features"
+            flags: "--all-features"
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ matrix.features.name }}-cross-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cross-cargo-
+    
+    - name: Build (${{ matrix.features.name }})
+      run: cargo build --verbose ${{ matrix.features.flags }}
+    
+    - name: Run tests (${{ matrix.features.name }})
+      run: cargo test --verbose ${{ matrix.features.flags }}
+
+  # Embedded/no_std compatibility
+  embedded:
+    name: Embedded Compatibility
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - name: "Cortex-M0/M0+ (no atomics)"
+            triple: thumbv6m-none-eabi
+            features: "--no-default-features"
+          - name: "Cortex-M3 (basic atomics)"
+            triple: thumbv7m-none-eabi
+            features: "--no-default-features"
+          - name: "Cortex-M4/M7 (standard)"
+            triple: thumbv7em-none-eabihf
+            features: "--no-default-features"
+          - name: "Cortex-M4/M7 (hardware-atomic)"
+            triple: thumbv7em-none-eabihf
+            features: "--no-default-features --features hardware-atomic"
+          - name: "Cortex-M4/M7 (automotive)"
+            triple: thumbv7em-none-eabihf
+            features: "--no-default-features --features automotive"
+          - name: "Cortex-M4/M7 (robotics)"
+            triple: thumbv7em-none-eabihf
+            features: "--no-default-features --features robotics"
+          - name: "Cortex-M4/M7 (iot)"
+            triple: thumbv7em-none-eabihf
+            features: "--no-default-features --features iot"
+          - name: "Cortex-M4/M7 (industrial)"
+            triple: thumbv7em-none-eabihf
+            features: "--no-default-features --features industrial"
+          - name: "RISC-V (standard)"
+            triple: riscv32imac-unknown-none-elf
+            features: "--no-default-features"
+          - name: "RISC-V (hardware-atomic)"
+            triple: riscv32imac-unknown-none-elf
+            features: "--no-default-features --features hardware-atomic"
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target.triple }}
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-embedded-${{ matrix.target.triple }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-embedded-cargo-
+    
+    - name: Check ${{ matrix.target.name }}
+      run: cargo check --target ${{ matrix.target.triple }} ${{ matrix.target.features }}
+    
+    - name: Build ${{ matrix.target.name }}
+      run: cargo build --target ${{ matrix.target.triple }} ${{ matrix.target.features }}
+
+  # Examples compilation
+  examples:
+    name: Examples
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example:
+          - name: "atomic_counter"
+            features: "--features hardware-atomic"
+          - name: "atomic_pncounter"
+            features: "--features hardware-atomic"
+          - name: "atomic_lww_register"
+            features: "--features hardware-atomic"
+          - name: "atomic_mv_register"
+            features: "--features hardware-atomic"
+          - name: "atomic_gset"
+            features: "--features hardware-atomic"
+          - name: "atomic_orset"
+            features: "--features hardware-atomic"
+          - name: "atomic_lww_map"
+            features: "--features hardware-atomic"
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-examples-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-examples-cargo-
+    
+    - name: Build example ${{ matrix.example.name }}
+      run: cargo build --example ${{ matrix.example.name }} ${{ matrix.example.features }}
+
+  # Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+    
+    - name: Run security audit
+      run: cargo audit
+
+  # Documentation
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-docs-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-docs-cargo-
+    
+    - name: Build documentation (all features)
+      run: cargo doc --all-features --no-deps
+    
+    - name: Build documentation (no_std)
+      run: cargo doc --no-default-features --no-deps
+    
+    - name: Check for broken links in docs
+      run: |
+        cargo doc --all-features --no-deps 2>&1 | tee doc_output.log
+        if grep -i "warning\|error" doc_output.log; then
+          echo "Documentation warnings or errors found"
+          exit 1
+        fi
+
+  # Automotive example compilation
+  automotive:
+    name: Automotive Example
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: thumbv7em-none-eabihf
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-automotive-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-automotive-cargo-
+    
+    - name: Build automotive example (embedded)
+      working-directory: examples/automotive_ecu_network
+      run: cargo build --target thumbv7em-none-eabihf
+    
+    - name: Build automotive example (host)
+      working-directory: examples/automotive_ecu_network
+      run: cargo build
+    
+    - name: Run automotive tests
+      working-directory: examples/automotive_ecu_network
+      run: cargo test
+
+  # Memory safety with Miri (nightly only)
+  miri:
+    name: Miri Memory Safety
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust nightly with miri
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: miri
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-miri-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-miri-cargo-
+    
+    - name: Run miri (standard)
+      run: |
+        cargo miri setup
+        cargo miri test --lib
+      env:
+        MIRIFLAGS: -Zmiri-disable-isolation
+    
+    - name: Run miri (hardware-atomic)
+      run: |
+        cargo miri test --lib --no-default-features --features hardware-atomic
+      env:
+        MIRIFLAGS: -Zmiri-disable-isolation
+
+  # Code coverage
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: llvm-tools-preview
+    
+    - name: Install cargo-llvm-cov
+      run: cargo install cargo-llvm-cov
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-coverage-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-coverage-cargo-
+    
+    - name: Generate coverage report
+      run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: lcov.info
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  # CRDT property verification
+  crdt-properties:
+    name: CRDT Properties
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-crdt-props-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-crdt-props-cargo-
+    
+    - name: Run CRDT property tests
+      run: |
+        cargo test --release --all-features -- --nocapture test_crdt_properties
+        cargo test --release --no-default-features --features hardware-atomic -- --nocapture test_crdt_properties
+
+  # Memory usage verification
+  memory-usage:
+    name: Memory Usage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: thumbv7em-none-eabihf
+    
+    - name: Install cargo-size
+      run: cargo install cargo-size
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-memory-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-memory-cargo-
+    
+    - name: Check memory usage (embedded)
+      run: |
+        cargo size --target thumbv7em-none-eabihf --no-default-features --lib
+        cargo size --target thumbv7em-none-eabihf --no-default-features --features hardware-atomic --lib
+    
+    - name: Run memory tests
+      run: cargo test --release memory_usage -- --nocapture
+
+  # Deterministic behavior verification
+  deterministic:
+    name: Deterministic Behavior
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-deterministic-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-deterministic-cargo-
+    
+    - name: Run deterministic tests
+      run: |
+        cargo test --release deterministic -- --nocapture
+        cargo test --release --no-default-features --features hardware-atomic deterministic -- --nocapture
+
+  # Final status check
+  pr-checks-complete:
+    name: All PR Checks Complete
+    runs-on: ubuntu-latest
+    needs: [
+      format-and-lint,
+      test,
+      property-tests,
+      benchmarks,
+      cross-platform,
+      embedded,
+      examples,
+      security,
+      docs,
+      automotive,
+      miri,
+      coverage,
+      crdt-properties,
+      memory-usage,
+      deterministic
+    ]
+    steps:
+    - name: Mark as complete
+      run: echo "All PR checks completed successfully!"

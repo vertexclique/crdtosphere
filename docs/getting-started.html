@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - CRDTosphere</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../art/crdtosphere_logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a8cc',
+                        'primary-dark': '#007799',
+                        secondary: '#ff6b35',
+                        accent: '#6366f1',
+                        'bg-primary': '#f8f9fa',
+                        'bg-secondary': '#e4e4e4',
+                        'bg-tertiary': '#d1d5db',
+                        'text-primary': '#1f2937',
+                        'text-secondary': '#4b5563',
+                        'text-muted': '#6b7280',
+                        'border-color': '#d1d5db',
+                        'code-bg': '#f3f4f6',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'gradient': 'gradient 15s ease infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        gradient: {
+                            '0%, 100%': {
+                                backgroundPosition: '0% 50%'
+                            },
+                            '50%': {
+                                backgroundPosition: '100% 50%'
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    </style>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-bg-primary/95 backdrop-blur-md border-b border-border-color z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-primary">CRDTosphere</span>
+                </div>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Home</a></li>
+                    <li><a href="getting-started.html" class="text-primary bg-primary/10 px-3 py-2 rounded-md font-medium">Getting Started</a></li>
+                    <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">CRDT Types</a></li>
+                    <li><a href="domains.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Domains</a></li>
+                    <li><a href="examples.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16">
+        <div class="max-w-4xl mx-auto px-6">
+            <!-- Header -->
+            <header class="text-center mb-16">
+                <h1 class="text-5xl font-extrabold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Getting Started
+                </h1>
+                <p class="text-xl text-text-secondary max-w-2xl mx-auto">
+                    Learn how to integrate CRDTosphere into your embedded systems project
+                </p>
+            </header>
+
+            <!-- Installation Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Installation</h2>
+                
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Add to Cargo.toml</h3>
+                    <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"
+
+# Optional features
+[features]
+default = []
+hardware-atomic = ["crdtosphere/hardware-atomic"]
+automotive = ["crdtosphere/automotive"]
+robotics = ["crdtosphere/robotics"]
+iot = ["crdtosphere/iot"]
+industrial = ["crdtosphere/industrial"]</code></pre>
+                </div>
+
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Import the Prelude</h3>
+                    <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;</code></pre>
+                </div>
+            </section>
+
+            <!-- Basic Usage Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Basic Usage</h2>
+                
+                <div class="space-y-8">
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Creating a Counter</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Create a grow-only counter with node ID 1
+    let mut counter = GCounter::&lt;DefaultConfig&gt;::new(1);
+    
+    // Increment the counter
+    counter.increment()?;
+    counter.increment()?;
+    
+    println!("Counter value: {}", counter.value()); // Output: 2
+    
+    Ok(())
+}</code></pre>
+                    </div>
+
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Working with Registers</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Create a last-writer-wins register
+    let mut register = LWWRegister::&lt;String, DefaultConfig&gt;::new(1);
+    
+    // Set a value with timestamp
+    register.set("Hello, World!".to_string(), 1000)?;
+    
+    // Get the current value
+    if let Some(value) = register.get() {
+        println!("Register value: {}", value);
+    }
+    
+    Ok(())
+}</code></pre>
+                    </div>
+
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Using Sets</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Create a grow-only set
+    let mut set = GSet::&lt;u32, DefaultConfig&gt;::new();
+    
+    // Add elements
+    set.insert(1)?;
+    set.insert(2)?;
+    set.insert(3)?;
+    
+    // Check membership
+    println!("Contains 2: {}", set.contains(&2)); // true
+    println!("Set size: {}", set.len()); // 3
+    
+    Ok(())
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Configuration</h2>
+                
+                <div class="space-y-8">
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Custom Configuration</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+// Define custom configuration for your embedded system
+#[derive(Debug, Clone)]
+struct EmbeddedConfig;
+
+impl CRDTConfig for EmbeddedConfig {
+    const MAX_NODES: usize = 8;        // Maximum 8 nodes
+    const MAX_ELEMENTS: usize = 64;    // Maximum 64 elements per CRDT
+    const ENABLE_VALIDATION: bool = true;
+    const ENABLE_METRICS: bool = false; // Disable for performance
+}
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Use custom configuration
+    let mut counter = GCounter::&lt;EmbeddedConfig&gt;::new(1);
+    counter.increment()?;
+    
+    Ok(())
+}</code></pre>
+                    </div>
+
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Memory-Bounded Configuration</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+// Ultra-constrained configuration for microcontrollers
+#[derive(Debug, Clone)]
+struct MicroConfig;
+
+impl CRDTConfig for MicroConfig {
+    const MAX_NODES: usize = 4;
+    const MAX_ELEMENTS: usize = 16;
+    const ENABLE_VALIDATION: bool = false; // Disable for minimal memory
+    const ENABLE_METRICS: bool = false;
+}
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Memory usage is known at compile time
+    let mut set = GSet::&lt;u8, MicroConfig&gt;::new();
+    
+    // All operations are bounded
+    for i in 0..10 {
+        set.insert(i)?;
+    }
+    
+    Ok(())
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Merging CRDTs Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Merging CRDTs</h2>
+                
+                <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                    <h3 class="text-xl font-semibold mb-4 text-primary">Distributed Counter Example</h3>
+                    <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Create counters on different nodes
+    let mut node1_counter = GCounter::&lt;DefaultConfig&gt;::new(1);
+    let mut node2_counter = GCounter::&lt;DefaultConfig&gt;::new(2);
+    
+    // Each node increments independently
+    node1_counter.increment()?; // Node 1: 1
+    node1_counter.increment()?; // Node 1: 2
+    
+    node2_counter.increment()?; // Node 2: 1
+    node2_counter.increment()?; // Node 2: 2
+    node2_counter.increment()?; // Node 2: 3
+    
+    println!("Node 1 count: {}", node1_counter.value()); // 2
+    println!("Node 2 count: {}", node2_counter.value()); // 3
+    
+    // Merge the counters (commutative and idempotent)
+    node1_counter.merge(&node2_counter)?;
+    
+    println!("Merged count: {}", node1_counter.value()); // 5
+    
+    Ok(())
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Error Handling Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Error Handling</h2>
+                
+                <div class="space-y-8">
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Handling CRDT Errors</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() {
+    let mut set = GSet::&lt;u32, DefaultConfig&gt;::new();
+    
+    // Handle potential errors
+    match set.insert(42) {
+        Ok(()) => println!("Successfully inserted 42"),
+        Err(CRDTError::CapacityExceeded) => {
+            println!("Set is full, cannot insert more elements");
+        }
+        Err(CRDTError::InvalidOperation) => {
+            println!("Invalid operation attempted");
+        }
+        Err(e) => println!("Other error: {:?}", e),
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Safety-Critical Error Handling</h3>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-rust">use crdtosphere::prelude::*;
+
+fn safety_critical_operation() -> Result&lt;(), CRDTError&gt; {
+    let mut register = LWWRegister::&lt;f32, DefaultConfig&gt;::new(1);
+    
+    // Validate input before setting
+    let sensor_value = 25.5;
+    if sensor_value &lt; 0.0 || sensor_value &gt; 100.0 {
+        return Err(CRDTError::InvalidOperation);
+    }
+    
+    // Set with current timestamp
+    let timestamp = get_current_timestamp();
+    register.set(sensor_value, timestamp)?;
+    
+    Ok(())
+}
+
+fn get_current_timestamp() -> u64 {
+    // Implementation depends on your embedded platform
+    1000 // Placeholder
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature Flags Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Feature Flags</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-lg font-semibold mb-3 text-primary">hardware-atomic</h3>
+                        <p class="text-text-secondary mb-4">Enable lock-free operations using hardware atomic primitives for multi-core systems.</p>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-3 text-sm overflow-x-auto"><code class="language-toml">hardware-atomic = ["crdtosphere/hardware-atomic"]</code></pre>
+                    </div>
+                    
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-lg font-semibold mb-3 text-primary">automotive</h3>
+                        <p class="text-text-secondary mb-4">ASIL-compliant CRDTs for automotive safety systems.</p>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-3 text-sm overflow-x-auto"><code class="language-toml">automotive = ["crdtosphere/automotive"]</code></pre>
+                    </div>
+                    
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-lg font-semibold mb-3 text-primary">robotics</h3>
+                        <p class="text-text-secondary mb-4">Specialized CRDTs for robot coordination and mapping.</p>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-3 text-sm overflow-x-auto"><code class="language-toml">robotics = ["crdtosphere/robotics"]</code></pre>
+                    </div>
+                    
+                    <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-lg font-semibold mb-3 text-primary">iot</h3>
+                        <p class="text-text-secondary mb-4">IoT device registries and sensor network CRDTs.</p>
+                        <pre class="bg-code-bg border border-border-color rounded-lg p-3 text-sm overflow-x-auto"><code class="language-toml">iot = ["crdtosphere/iot"]</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Next Steps Section -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Next Steps</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">📚</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Learn CRDT Types</h3>
+                        <p class="text-text-secondary mb-6">Explore the different CRDT types available and learn when to use each one.</p>
+                        <a href="crdt-types.html" class="text-primary hover:text-secondary font-semibold">View CRDT Types →</a>
+                    </div>
+                    
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">💻</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Try Examples</h3>
+                        <p class="text-text-secondary mb-6">See practical examples and real-world usage patterns for different scenarios.</p>
+                        <a href="examples.html" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                    
+                    
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">🌐</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Domain Applications</h3>
+                        <p class="text-text-secondary mb-6">Discover specialized CRDTs for automotive, robotics, IoT, and industrial use cases.</p>
+                        <a href="domains.html" class="text-primary hover:text-secondary font-semibold">Explore Domains →</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-bg-secondary border-t border-border-color py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Documentation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="getting-started.html" class="text-text-secondary hover:text-primary transition-colors">Getting Started</a></li>
+                        <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary transition-colors">CRDT Types</a></li>
+                        <li><a href="examples.html" class="text-text-secondary hover:text-primary transition-colors">Examples</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Features</h4>
+                    <ul class="space-y-2">
+                        <li><a href="domains.html" class="text-text-secondary hover:text-primary transition-colors">Domain Applications</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Community</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com/vertexclique/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">GitHub</a></li>
+                        <li><a href="https://crates.io/crates/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">Crates.io</a></li>
+                        <li><a href="https://docs.rs/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">docs.rs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center pt-8 border-t border-border-color">
+                <p class="text-text-muted">&copy; 2025 CRDTosphere. Built with ❤️ for embedded systems by vertexclique.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

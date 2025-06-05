@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRDT Types - CRDTosphere</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../art/crdtosphere_logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a8cc',
+                        'primary-dark': '#007799',
+                        secondary: '#ff6b35',
+                        accent: '#6366f1',
+                        'bg-primary': '#f8f9fa',
+                        'bg-secondary': '#e4e4e4',
+                        'bg-tertiary': '#d1d5db',
+                        'text-primary': '#1f2937',
+                        'text-secondary': '#4b5563',
+                        'text-muted': '#6b7280',
+                        'border-color': '#d1d5db',
+                        'code-bg': '#f3f4f6',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-bg-primary/95 backdrop-blur-md border-b border-border-color z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-primary">CRDTosphere</span>
+                </div>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Home</a></li>
+                    <li><a href="getting-started.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Getting Started</a></li>
+                    <li><a href="crdt-types.html" class="text-primary bg-primary/10 px-3 py-2 rounded-md font-medium">CRDT Types</a></li>
+                    <li><a href="domains.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Domains</a></li>
+                    <li><a href="examples.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <!-- Header -->
+            <header class="text-center mb-16">
+                <h1 class="text-5xl font-extrabold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    CRDT Types Guide
+                </h1>
+                <p class="text-xl text-text-secondary max-w-3xl mx-auto">
+                    Choose the right conflict-free replicated data type for your use case
+                </p>
+            </header>
+
+            <!-- What are CRDTs Section -->
+            <section class="mb-20">
+                <h2 class="text-4xl font-bold mb-8 text-text-primary">What are CRDTs?</h2>
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <p class="text-lg text-text-secondary leading-relaxed mb-6">
+                        Conflict-free Replicated Data Types (CRDTs) are data structures that can be replicated across 
+                        multiple nodes in a distributed system and merged automatically without conflicts. They guarantee 
+                        that all replicas will eventually converge to the same state, regardless of the order of operations or 
+                        network partitions.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <div class="text-2xl mb-3">🔄</div>
+                            <h3 class="text-lg font-semibold mb-2 text-primary">Convergence</h3>
+                            <p class="text-text-secondary text-sm">All replicas eventually reach the same state</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <div class="text-2xl mb-3">🚫</div>
+                            <h3 class="text-lg font-semibold mb-2 text-primary">Conflict-Free</h3>
+                            <p class="text-text-secondary text-sm">No manual conflict resolution required</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <div class="text-2xl mb-3">📡</div>
+                            <h3 class="text-lg font-semibold mb-2 text-primary">Network Partition Tolerant</h3>
+                            <p class="text-text-secondary text-sm">Works even when nodes are disconnected</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CRDT Types Overview -->
+            <section class="mb-20">
+                <h2 class="text-4xl font-bold mb-12 text-text-primary">Available CRDT Types</h2>
+                
+                <div class="space-y-12">
+                    <!-- Counters -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center mb-6">
+                            <div class="text-3xl mr-4">🔢</div>
+                            <h3 class="text-2xl font-bold text-primary">Counters</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-xl font-semibold mb-3 text-text-primary">GCounter (Grow-Only Counter)</h4>
+                                <p class="text-text-secondary mb-4">A counter that can only be incremented. Perfect for tracking metrics that only increase.</p>
+                                
+                                <div class="mb-4">
+                                    <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                    <ul class="text-sm text-text-secondary space-y-1">
+                                        <li>• Event counting (page views, API calls)</li>
+                                        <li>• Metrics aggregation</li>
+                                        <li>• Resource usage tracking</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">let mut counter = GCounter::&lt;DefaultConfig&gt;::new(1);
+counter.increment()?;
+println!("Value: {}", counter.value()); // 1</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-xl font-semibold mb-3 text-text-primary">PNCounter (Increment/Decrement Counter)</h4>
+                                <p class="text-text-secondary mb-4">A counter that supports both increment and decrement operations using two internal GCounters.</p>
+                                
+                                <div class="mb-4">
+                                    <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                    <ul class="text-sm text-text-secondary space-y-1">
+                                        <li>• Inventory management</li>
+                                        <li>• Vote counting (upvotes/downvotes)</li>
+                                        <li>• Resource allocation</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">let mut counter = PNCounter::&lt;DefaultConfig&gt;::new(1);
+counter.increment()?;
+counter.decrement()?;
+println!("Value: {}", counter.value()); // 0</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registers -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center mb-6">
+                            <div class="text-3xl mr-4">📝</div>
+                            <h3 class="text-2xl font-bold text-primary">Registers</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-xl font-semibold mb-3 text-text-primary">LWWRegister (Last-Writer-Wins)</h4>
+                                <p class="text-text-secondary mb-4">Stores a single value with timestamp-based conflict resolution. The most recent write wins.</p>
+                                
+                                <div class="mb-4">
+                                    <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                    <ul class="text-sm text-text-secondary space-y-1">
+                                        <li>• Configuration management</li>
+                                        <li>• User profile data</li>
+                                        <li>• System status tracking</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">let mut reg = LWWRegister::&lt;String, DefaultConfig&gt;::new(1);
+reg.set("value".to_string(), 1000)?;
+println!("Value: {:?}", reg.get()); // Some("value")</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-xl font-semibold mb-3 text-text-primary">MVRegister (Multi-Value Register)</h4>
+                                <p class="text-text-secondary mb-4">Stores multiple concurrent values when conflicts occur, allowing application-level resolution.</p>
+                                
+                                <div class="mb-4">
+                                    <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                    <ul class="text-sm text-text-secondary space-y-1">
+                                        <li>• Collaborative editing</li>
+                                        <li>• Sensor calibration</li>
+                                        <li>• Conflict detection systems</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">let mut reg = MVRegister::&lt;f32, DefaultConfig&gt;::new(1);
+reg.set(1.05, 1000)?;
+let values: Vec&lt;f32&gt; = reg.values().cloned().collect();</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sets -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center mb-6">
+                            <div class="text-3xl mr-4">📦</div>
+                            <h3 class="text-2xl font-bold text-primary">Sets</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-xl font-semibold mb-3 text-text-primary">GSet (Grow-Only Set)</h4>
+                                <p class="text-text-secondary mb-4">A set that only supports adding elements. Once added, elements cannot be removed.</p>
+                                
+                                <div class="mb-4">
+                                    <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                    <ul class="text-sm text-text-secondary space-y-1">
+                                        <li>• Device capability registry</li>
+                                        <li>• Feature flags</li>
+                                        <li>• Permanent audit logs</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">let mut set = GSet::&lt;u32, DefaultConfig&gt;::new();
+set.insert(42)?;
+println!("Contains 42: {}", set.contains(&42)); // true</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-xl font-semibold mb-3 text-text-primary">ORSet (Observed-Remove Set)</h4>
+                                <p class="text-text-secondary mb-4">A set that supports both adding and removing elements using unique tags for each operation.</p>
+                                
+                                <div class="mb-4">
+                                    <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                    <ul class="text-sm text-text-secondary space-y-1">
+                                        <li>• Shopping cart management</li>
+                                        <li>• Active user sessions</li>
+                                        <li>• Dynamic group membership</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                    <pre><code class="language-rust">let mut set = ORSet::&lt;u32, DefaultConfig&gt;::new(1);
+let tag = set.insert(42)?;
+set.remove(&42, tag)?;</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maps -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center mb-6">
+                            <div class="text-3xl mr-4">🗺️</div>
+                            <h3 class="text-2xl font-bold text-primary">Maps</h3>
+                        </div>
+                        
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h4 class="text-xl font-semibold mb-3 text-text-primary">LWWMap (Last-Writer-Wins Map)</h4>
+                            <p class="text-text-secondary mb-4">A key-value map where each key uses last-writer-wins semantics for conflict resolution.</p>
+                            
+                            <div class="mb-4">
+                                <h5 class="font-semibold text-primary mb-2">Use Cases:</h5>
+                                <ul class="text-sm text-text-secondary space-y-1">
+                                    <li>• Distributed configuration stores</li>
+                                    <li>• Sensor data aggregation</li>
+                                    <li>• User preference management</li>
+                                    <li>• Metadata storage</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-code-bg border border-border-color rounded-lg p-4">
+                                <pre><code class="language-rust">let mut map = LWWMap::&lt;String, f32, DefaultConfig&gt;::new();
+map.insert("temperature".to_string(), 25.5, 1000)?;
+println!("Temp: {:?}", map.get(&"temperature".to_string()));</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Selection Guide -->
+            <section class="mb-20">
+                <h2 class="text-4xl font-bold mb-12 text-text-primary">CRDT Selection Guide</h2>
+                
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Choose Based on Operations</h3>
+                            <div class="space-y-4">
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">Need to count things?</h4>
+                                    <p class="text-sm text-text-secondary mb-2">Use <strong>GCounter</strong> for increment-only or <strong>PNCounter</strong> for increment/decrement</p>
+                                </div>
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">Need to store single values?</h4>
+                                    <p class="text-sm text-text-secondary mb-2">Use <strong>LWWRegister</strong> for simple cases or <strong>MVRegister</strong> for conflict detection</p>
+                                </div>
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">Need to manage collections?</h4>
+                                    <p class="text-sm text-text-secondary mb-2">Use <strong>GSet</strong> for add-only or <strong>ORSet</strong> for add/remove operations</p>
+                                </div>
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">Need key-value storage?</h4>
+                                    <p class="text-sm text-text-secondary mb-2">Use <strong>LWWMap</strong> for distributed key-value data</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Choose Based on Use Case</h3>
+                            <div class="space-y-4">
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">🚗 Automotive</h4>
+                                    <p class="text-sm text-text-secondary">LWWRegister for sensor data, GCounter for error counts</p>
+                                </div>
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">🤖 Robotics</h4>
+                                    <p class="text-sm text-text-secondary">GSet for robot discovery, LWWMap for position tracking</p>
+                                </div>
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">🌐 IoT</h4>
+                                    <p class="text-sm text-text-secondary">LWWMap for sensor readings, GSet for device capabilities</p>
+                                </div>
+                                <div class="bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                                    <h4 class="font-semibold text-text-primary mb-2">🏭 Industrial</h4>
+                                    <p class="text-sm text-text-secondary">GCounter for production counts, LWWRegister for equipment status</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Next Steps</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">💻</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Try Examples</h3>
+                        <p class="text-text-secondary mb-6">See practical examples of each CRDT type in action.</p>
+                        <a href="examples.html" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                    
+                    
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">🌐</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Domain Applications</h3>
+                        <p class="text-text-secondary mb-6">Explore specialized CRDTs for different industries.</p>
+                        <a href="domains.html" class="text-primary hover:text-secondary font-semibold">Explore Domains →</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-bg-secondary border-t border-border-color py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Documentation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="getting-started.html" class="text-text-secondary hover:text-primary transition-colors">Getting Started</a></li>
+                        <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary transition-colors">CRDT Types</a></li>
+                        <li><a href="examples.html" class="text-text-secondary hover:text-primary transition-colors">Examples</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Features</h4>
+                    <ul class="space-y-2">
+                        <li><a href="domains.html" class="text-text-secondary hover:text-primary transition-colors">Domain Applications</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Community</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com/vertexclique/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">GitHub</a></li>
+                        <li><a href="https://crates.io/crates/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">Crates.io</a></li>
+                        <li><a href="https://docs.rs/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">docs.rs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center pt-8 border-t border-border-color">
+                <p class="text-text-muted">&copy; 2025 CRDTosphere. Built with ❤️ for embedded systems by vertexclique.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,4 @@
+/target
+examples/automotive_ecu_network/target/
+.clinerules
+memory-bank/

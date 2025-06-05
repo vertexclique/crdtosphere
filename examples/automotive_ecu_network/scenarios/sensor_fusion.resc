@@ -1,0 +1,49 @@
+# Sensor Fusion Scenario
+# Tests CRDT-based sensor data fusion across multiple ECUs
+
+# Sensor Fusion Scenario - runs on top of loaded simulation
+# Note: This assumes ECUs are already loaded and running
+
+echo "=== Sensor Fusion Scenario ==="
+echo "Testing CRDT sensor fusion with varying reliability levels"
+
+# Inject diverse temperature readings to test fusion
+echo "Injecting diverse sensor readings..."
+
+# Engine ECU: High reliability, moderate temperature
+mach set "engine_ecu"
+sysbus WriteDoubleWord 0x50000000 0x4B400000  # 80°C (high reliability) to input region
+
+# Brake ECU: Medium reliability, lower temperature  
+mach set "brake_ecu"
+sysbus WriteDoubleWord 0x50000000 0x42480000  # 50°C (medium reliability) to input region
+
+# Steering ECU: Medium reliability, higher temperature
+mach set "steering_ecu"
+sysbus WriteDoubleWord 0x50000000 0x42C80000  # 100°C (medium reliability) to input region
+
+# Gateway ECU: Low reliability, outlier reading
+mach set "gateway_ecu"
+sysbus WriteDoubleWord 0x50000000 0x43160000  # 150°C (low reliability - outlier) to input region
+
+echo "Diverse temperature readings injected:"
+echo "  Engine: 80°C (High reliability)"
+echo "  Brake: 50°C (Medium reliability)"
+echo "  Steering: 100°C (Medium reliability)"
+echo "  Gateway: 150°C (Low reliability - outlier)"
+
+echo ""
+echo "Expected CRDT fusion behavior:"
+echo "  - Weighted average based on reliability"
+echo "  - High/medium reliability sensors dominate"
+echo "  - Low reliability outlier has minimal impact"
+echo "  - Final fused temperature: ~77°C"
+
+echo ""
+echo "Monitoring sensor fusion convergence..."
+
+# The sensor fusion CRDT should:
+# 1. Weight readings by reliability level
+# 2. Converge to a weighted average
+# 3. Minimize impact of unreliable outliers
+# 4. Provide consistent results across all ECUs

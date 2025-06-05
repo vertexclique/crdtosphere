@@ -1,0 +1,13 @@
+[target.thumbv7em-none-eabihf]
+# Use the LLD linker
+linker = "rust-lld"
+
+# Use the Tlink.x linker script from the cortex-m-rt crate
+rustflags = [
+  "-C", "link-arg=-Tlink.x",
+  "-C", "link-arg=--nmagic",
+]
+
+[build]
+# Set the default target
+target = "thumbv7em-none-eabihf"

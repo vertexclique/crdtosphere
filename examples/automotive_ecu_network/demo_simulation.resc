@@ -1,0 +1,69 @@
+# Demo script for Automotive ECU Network
+# This script automatically starts all ECUs and runs a demonstration
+
+# Create Engine ECU (ASIL-D)
+mach create "engine_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/engine_ecu
+
+# Create Brake ECU (ASIL-D)
+mach create "brake_ecu" 
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/brake_ecu
+
+# Create Steering ECU (ASIL-C)
+mach create "steering_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/steering_ecu
+
+# Create Gateway ECU (ASIL-B)
+mach create "gateway_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/gateway_ecu
+
+# Configure simulation parameters
+emulation SetGlobalQuantum "0.00001"
+emulation SetGlobalSerialExecution true
+
+echo "=== Automotive ECU Network Demo ==="
+echo "Starting all ECUs..."
+
+# Start all ECUs
+mach set "engine_ecu"
+start
+echo "Engine ECU started"
+
+mach set "brake_ecu"
+start
+echo "Brake ECU started"
+
+mach set "steering_ecu"
+start
+echo "Steering ECU started"
+
+mach set "gateway_ecu"
+start
+echo "Gateway ECU started"
+
+echo ""
+echo "All ECUs are now running!"
+echo ""
+echo "Available commands:"
+echo "  emulation RunFor \"5.0\"     - Run simulation for 5 seconds"
+echo "  pause                      - Pause all ECUs"
+echo "  start                      - Resume all ECUs"
+echo "  quit                       - Exit simulation"
+echo ""
+echo "Example sensor data injection:"
+echo "  mach set \"engine_ecu\""
+echo "  sensorRegion WriteDoubleWord 0x0 0x4B000000  # 75.0°C"
+echo ""
+echo "Example CAN message injection:"
+echo "  mach set \"engine_ecu\""
+echo "  can1_region WriteDoubleWord 0x0 0x01500000   # Engine message"
+echo ""
+echo "Demo ready! Type 'emulation RunFor \"5.0\"' to run for 5 seconds"

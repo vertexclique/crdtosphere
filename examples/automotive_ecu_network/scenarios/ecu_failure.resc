@@ -1,0 +1,73 @@
+# ECU Failure Scenario
+# Tests CRDT resilience during ECU failures and recovery
+
+# ECU Failure Scenario - runs on top of loaded simulation
+# Note: This assumes ECUs are already loaded and running
+
+echo "=== ECU Failure Scenario ==="
+echo "Testing CRDT resilience during ECU failure and recovery"
+
+# Set initial normal conditions
+echo "Setting initial normal conditions..."
+
+mach set "engine_ecu"
+sysbus WriteDoubleWord 0x50000000 0x4B000000  # 75°C to sensor region
+
+mach set "brake_ecu"
+sysbus WriteDoubleWord 0x50000000 0x42200000  # 40°C to sensor region
+
+mach set "steering_ecu"
+sysbus WriteDoubleWord 0x50000000 0x41C80000  # 35°C to sensor region
+
+mach set "gateway_ecu"
+sysbus WriteDoubleWord 0x50000000 0x41F00000  # 30°C to sensor region
+
+echo "Normal conditions established"
+
+# Simulate brake ECU failure
+echo ""
+echo "SIMULATING BRAKE ECU FAILURE..."
+mach set "brake_ecu"
+pause
+
+echo "Brake ECU paused (simulating hardware failure)"
+echo "System continues with remaining ECUs..."
+
+# Update conditions while brake ECU is down
+echo "Updating system state while brake ECU is offline..."
+
+mach set "engine_ecu"
+sysbus WriteDoubleWord 0x50000000 0x4B800000  # 88°C (increased) to sensor region
+
+mach set "steering_ecu"
+sysbus WriteDoubleWord 0x50000000 0x42000000  # 32°C to sensor region
+
+# Inject configuration update from gateway
+mach set "gateway_ecu"
+sysbus WriteDoubleWord 0x40006400 0x04190001  # New configuration to CAN region
+sysbus WriteDoubleWord 0x40006404 0x00000001  # Valid flag
+
+echo "State updated while brake ECU offline"
+echo "Expected: System continues with degraded functionality"
+
+echo ""
+echo "SIMULATING BRAKE ECU RECOVERY..."
+mach set "brake_ecu"
+start
+
+echo "Brake ECU restarted (simulating repair/reboot)"
+echo "Expected CRDT behavior:"
+echo "  - Brake ECU catches up with current state"
+echo "  - Configuration synchronizes via LWW-Register"
+echo "  - Temperature fusion includes brake ECU again"
+echo "  - Error counters reflect the failure event"
+echo "  - System returns to full functionality"
+
+echo ""
+echo "Monitoring CRDT convergence after recovery..."
+
+# The CRDT system should:
+# 1. Continue operating with remaining ECUs during failure
+# 2. Automatically sync the recovered ECU to current state
+# 3. Merge any conflicting updates using CRDT semantics
+# 4. Restore full system functionality seamlessly

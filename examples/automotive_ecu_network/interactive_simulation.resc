@@ -1,0 +1,80 @@
+# Interactive Automotive ECU Network Simulation
+# This script shows how to interact with running ECUs and observe CRDT operations
+
+# Create Engine ECU (ASIL-D)
+mach create "engine_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/engine_ecu
+
+# Create Brake ECU (ASIL-D)
+mach create "brake_ecu" 
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/brake_ecu
+
+# Create Steering ECU (ASIL-C)
+mach create "steering_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/steering_ecu
+
+# Create Gateway ECU (ASIL-B)
+mach create "gateway_ecu"
+machine LoadPlatformDescription @renode/platform.repl
+machine SetSerialExecution true
+sysbus LoadELF @target/thumbv7em-none-eabihf/release/gateway_ecu
+
+# Configure simulation parameters
+emulation SetGlobalQuantum "0.00001"
+emulation SetGlobalSerialExecution true
+
+echo "=== Interactive Automotive ECU Network Simulation ==="
+echo ""
+echo "ECUs loaded but NOT started yet. This allows you to:"
+echo "1. Start ECUs individually to observe their behavior"
+echo "2. Inject data before starting"
+echo "3. Control simulation timing precisely"
+echo ""
+echo "STEP 1: Start ECUs individually"
+echo "Commands to start each ECU:"
+echo "  mach set \"engine_ecu\"; start"
+echo "  mach set \"brake_ecu\"; start" 
+echo "  mach set \"steering_ecu\"; start"
+echo "  mach set \"gateway_ecu\"; start"
+echo ""
+echo "STEP 2: Inject sensor data (while ECUs are running)"
+echo "Engine temperature (75°C):"
+echo "  mach set \"engine_ecu\"; sensorRegion WriteDoubleWord 0x0 0x4B000000"
+echo "Brake temperature (40°C):"
+echo "  mach set \"brake_ecu\"; sensorRegion WriteDoubleWord 0x0 0x42200000"
+echo "Critical engine temperature (115°C - triggers emergency):"
+echo "  mach set \"engine_ecu\"; sensorRegion WriteDoubleWord 0x0 0x42E60000"
+echo ""
+echo "STEP 3: Inject CAN messages"
+echo "Engine temperature broadcast:"
+echo "  mach set \"engine_ecu\"; can1_region WriteDoubleWord 0x0 0x01500000"
+echo "Emergency brake command:"
+echo "  mach set \"brake_ecu\"; can1_region WriteDoubleWord 0x0 0x00640100"
+echo ""
+echo "STEP 4: Monitor memory regions (see CRDT state)"
+echo "Read engine sensor data:"
+echo "  mach set \"engine_ecu\"; sensorRegion ReadDoubleWord 0x0"
+echo "Read CAN message buffer:"
+echo "  mach set \"engine_ecu\"; can1_region ReadDoubleWord 0x0"
+echo ""
+echo "STEP 5: Control simulation timing"
+echo "Pause all ECUs:"
+echo "  pause"
+echo "Resume all ECUs:"
+echo "  start"
+echo "Step through execution:"
+echo "  step"
+echo ""
+echo "STEP 6: Advanced monitoring"
+echo "Show CPU state:"
+echo "  mach set \"engine_ecu\"; cpu"
+echo "Show memory map:"
+echo "  mach set \"engine_ecu\"; machine"
+echo ""
+echo "Ready! Start with: mach set \"engine_ecu\"; start"

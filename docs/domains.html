@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Applications - CRDTosphere</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../art/crdtosphere_logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a8cc',
+                        'primary-dark': '#007799',
+                        secondary: '#ff6b35',
+                        accent: '#6366f1',
+                        'bg-primary': '#f8f9fa',
+                        'bg-secondary': '#e4e4e4',
+                        'bg-tertiary': '#d1d5db',
+                        'text-primary': '#1f2937',
+                        'text-secondary': '#4b5563',
+                        'text-muted': '#6b7280',
+                        'border-color': '#d1d5db',
+                        'code-bg': '#f3f4f6',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-bg-primary/95 backdrop-blur-md border-b border-border-color z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-primary">CRDTosphere</span>
+                </div>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Home</a></li>
+                    <li><a href="getting-started.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Getting Started</a></li>
+                    <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">CRDT Types</a></li>
+                    <li><a href="domains.html" class="text-primary bg-primary/10 px-3 py-2 rounded-md font-medium">Domains</a></li>
+                    <li><a href="examples.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <!-- Header -->
+            <header class="text-center mb-16">
+                <h1 class="text-5xl font-extrabold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Domain Applications
+                </h1>
+                <p class="text-xl text-text-secondary max-w-3xl mx-auto">
+                    Specialized CRDTs for automotive, robotics, IoT, and industrial embedded systems
+                </p>
+            </header>
+
+            <!-- Overview Section -->
+            <section class="mb-20">
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <h2 class="text-3xl font-bold mb-6 text-text-primary">Why Domain-Specific CRDTs?</h2>
+                    <p class="text-lg text-text-secondary leading-relaxed mb-6">
+                        Different industries have unique requirements for distributed data management. CRDTosphere provides 
+                        specialized implementations optimized for the specific constraints and safety requirements of each domain.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color text-center">
+                            <div class="text-3xl mb-3">🚗</div>
+                            <h3 class="font-semibold text-secondary mb-2">Automotive</h3>
+                            <p class="text-sm text-text-secondary">ASIL-compliant safety systems</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color text-center">
+                            <div class="text-3xl mb-3">🤖</div>
+                            <h3 class="font-semibold text-secondary mb-2">Robotics</h3>
+                            <p class="text-sm text-text-secondary">Real-time coordination</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color text-center">
+                            <div class="text-3xl mb-3">🌐</div>
+                            <h3 class="font-semibold text-secondary mb-2">IoT</h3>
+                            <p class="text-sm text-text-secondary">Edge computing optimization</p>
+                        </div>
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color text-center">
+                            <div class="text-3xl mb-3">🏭</div>
+                            <h3 class="font-semibold text-secondary mb-2">Industrial</h3>
+                            <p class="text-sm text-text-secondary">Process control systems</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Automotive Section -->
+            <section id="automotive" class="mb-20">
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <div class="flex items-center mb-8">
+                        <div class="text-4xl mr-4">🚗</div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-secondary">Automotive Systems</h2>
+                            <p class="text-text-secondary">Safety-critical distributed systems for modern vehicles</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Safety Requirements</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>ASIL Compliance:</strong> Automotive Safety Integrity Level support (A through D)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Deterministic Timing:</strong> Bounded execution times for real-time constraints</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Fault Tolerance:</strong> Graceful degradation under component failures</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Memory Safety:</strong> No dynamic allocation in safety-critical paths</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Use Cases</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Sensor Fusion:</strong> Combining data from multiple ECUs</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Vehicle State:</strong> Distributed vehicle status management</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Error Tracking:</strong> Fault detection and reporting across systems</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Configuration:</strong> ECU parameter synchronization</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Example: Brake System Coordination</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4 mb-4">
+                            <pre><code class="language-rust">use crdtosphere::automotive::*;
+
+// ASIL-D compliant brake system state
+let mut brake_ecu1 = SafetyRegister::&lt;BrakeStatus, ASIL_D&gt;::new(1);
+let mut brake_ecu2 = SafetyRegister::&lt;BrakeStatus, ASIL_D&gt;::new(2);
+
+// Safety-critical brake engagement
+brake_ecu1.set_with_validation(BrakeStatus::Engaged, timestamp, |status| {
+    // Validate brake engagement is physically possible
+    status.validate_safety_constraints()
+})?;
+
+// Merge with safety prioritization
+brake_ecu1.merge_with_safety_check(&brake_ecu2)?;</code></pre>
+                        </div>
+                        <p class="text-sm text-text-secondary">
+                            This example shows ASIL-D compliant brake system coordination with safety validation 
+                            and deterministic merge operations.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Robotics Section -->
+            <section id="robotics" class="mb-20">
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <div class="flex items-center mb-8">
+                        <div class="text-4xl mr-4">🤖</div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-secondary">Robotics Systems</h2>
+                            <p class="text-text-secondary">Distributed coordination for autonomous robot swarms</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Coordination Challenges</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Dynamic Membership:</strong> Robots joining and leaving swarms</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Spatial Coordination:</strong> Position and movement synchronization</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Task Assignment:</strong> Distributed work allocation</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Communication Limits:</strong> Intermittent network connectivity</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">CRDT Applications</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Swarm Membership:</strong> GSet for robot discovery</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Position Tracking:</strong> LWWMap for location data</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Status Updates:</strong> LWWRegister for robot states</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Shared Mapping:</strong> Collaborative environment mapping</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Example: Robot Swarm Coordination</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4 mb-4">
+                            <pre><code class="language-rust">use crdtosphere::robotics::*;
+
+// Swarm membership and coordination
+let mut swarm = SwarmRegistry::&lt;RobotConfig&gt;::new(robot_id);
+let mut position_map = PositionMap::&lt;RobotConfig&gt;::new(robot_id);
+let mut task_assignment = TaskMap::&lt;RobotConfig&gt;::new(robot_id);
+
+// Robot joins swarm
+swarm.join_swarm(robot_id, capabilities)?;
+
+// Update position with timestamp
+position_map.update_position(robot_id, Position::new(x, y, z), timestamp)?;
+
+// Coordinate task assignment
+task_assignment.assign_task(robot_id, Task::Patrol(area), priority)?;</code></pre>
+                        </div>
+                        <p class="text-sm text-text-secondary">
+                            Specialized CRDTs for robot swarm coordination with position tracking and task assignment.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- IoT Section -->
+            <section id="iot" class="mb-20">
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <div class="flex items-center mb-8">
+                        <div class="text-4xl mr-4">🌐</div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-secondary">IoT Networks</h2>
+                            <p class="text-text-secondary">Edge computing and sensor network optimization</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">IoT Constraints</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Limited Resources:</strong> Minimal memory and processing power</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Intermittent Connectivity:</strong> Unreliable network connections</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Power Efficiency:</strong> Battery-powered operation</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Scale:</strong> Thousands of devices in a network</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Optimizations</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Compact Encoding:</strong> Minimal wire format overhead</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Delta Synchronization:</strong> Only sync changes</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Hierarchical Merging:</strong> Edge-to-cloud aggregation</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Adaptive Precision:</strong> Quality-based data retention</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Example: Sensor Network</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4 mb-4">
+                            <pre><code class="language-rust">use crdtosphere::iot::*;
+
+// Lightweight sensor data aggregation
+let mut sensor_data = SensorMap::&lt;IoTConfig&gt;::new(device_id);
+let mut device_registry = DeviceSet::&lt;IoTConfig&gt;::new();
+
+// Register device capabilities
+device_registry.register_device(device_id, capabilities)?;
+
+// Efficient sensor data updates
+sensor_data.update_reading(
+    SensorType::Temperature, 
+    25.5, 
+    timestamp,
+    QualityMetric::High
+)?;
+
+// Delta sync for bandwidth efficiency
+let delta = sensor_data.create_delta_since(last_sync)?;
+network.send_delta(delta)?;</code></pre>
+                        </div>
+                        <p class="text-sm text-text-secondary">
+                            Optimized CRDTs for IoT with minimal memory footprint and efficient synchronization.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Industrial Section -->
+            <section id="industrial" class="mb-20">
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                    <div class="flex items-center mb-8">
+                        <div class="text-4xl mr-4">🏭</div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-secondary">Industrial Automation</h2>
+                            <p class="text-text-secondary">Process control and manufacturing systems</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Industrial Requirements</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>High Availability:</strong> 99.9%+ uptime requirements</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Process Control:</strong> Real-time control loop integration</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Audit Trails:</strong> Complete operation history</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Predictive Maintenance:</strong> Equipment health monitoring</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                            <h3 class="text-xl font-semibold mb-4 text-primary">Applications</h3>
+                            <ul class="space-y-3 text-text-secondary">
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Production Counting:</strong> Manufacturing metrics</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Equipment Status:</strong> Machine state tracking</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Quality Control:</strong> Defect rate monitoring</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-secondary mr-2">•</span>
+                                    <span><strong>Resource Planning:</strong> Material flow optimization</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Example: Manufacturing Line</h3>
+                        <div class="bg-code-bg border border-border-color rounded-lg p-4 mb-4">
+                            <pre><code class="language-rust">use crdtosphere::industrial::*;
+
+// Manufacturing line coordination
+let mut production_counter = ProductionCounter::&lt;IndustrialConfig&gt;::new(line_id);
+let mut equipment_status = EquipmentMap::&lt;IndustrialConfig&gt;::new(line_id);
+let mut quality_metrics = QualityRegister::&lt;IndustrialConfig&gt;::new(line_id);
+
+// Track production with audit trail
+production_counter.increment_with_audit(
+    product_id, 
+    operator_id, 
+    timestamp
+)?;
+
+// Update equipment status
+equipment_status.update_status(
+    machine_id,
+    EquipmentStatus::Running,
+    health_metrics,
+    timestamp
+)?;</code></pre>
+                        </div>
+                        <p class="text-sm text-text-secondary">
+                            Industrial CRDTs with audit trails and high-availability guarantees for manufacturing systems.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature Comparison -->
+            <section class="mb-20">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Domain Feature Comparison</h2>
+                
+                <div class="bg-bg-secondary p-8 rounded-xl border border-border-color overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border-color">
+                                <th class="text-left py-3 px-4 font-semibold text-primary">Feature</th>
+                                <th class="text-center py-3 px-4 font-semibold text-secondary">🚗 Automotive</th>
+                                <th class="text-center py-3 px-4 font-semibold text-secondary">🤖 Robotics</th>
+                                <th class="text-center py-3 px-4 font-semibold text-secondary">🌐 IoT</th>
+                                <th class="text-center py-3 px-4 font-semibold text-secondary">🏭 Industrial</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-text-secondary">
+                            <tr class="border-b border-border-color">
+                                <td class="py-3 px-4 font-medium">Safety Certification</td>
+                                <td class="text-center py-3 px-4">✅ ASIL A-D</td>
+                                <td class="text-center py-3 px-4">⚠️ Application-specific</td>
+                                <td class="text-center py-3 px-4">❌ Not required</td>
+                                <td class="text-center py-3 px-4">✅ SIL 1-4</td>
+                            </tr>
+                            <tr class="border-b border-border-color">
+                                <td class="py-3 px-4 font-medium">Real-time Guarantees</td>
+                                <td class="text-center py-3 px-4">✅ Hard RT</td>
+                                <td class="text-center py-3 px-4">✅ Soft RT</td>
+                                <td class="text-center py-3 px-4">⚠️ Best effort</td>
+                                <td class="text-center py-3 px-4">✅ Hard RT</td>
+                            </tr>
+                            <tr class="border-b border-border-color">
+                                <td class="py-3 px-4 font-medium">Memory Constraints</td>
+                                <td class="text-center py-3 px-4">⚠️ Moderate</td>
+                                <td class="text-center py-3 px-4">⚠️ Moderate</td>
+                                <td class="text-center py-3 px-4">✅ Severe</td>
+                                <td class="text-center py-3 px-4">❌ Relaxed</td>
+                            </tr>
+                            <tr class="border-b border-border-color">
+                                <td class="py-3 px-4 font-medium">Network Reliability</td>
+                                <td class="text-center py-3 px-4">✅ High</td>
+                                <td class="text-center py-3 px-4">⚠️ Variable</td>
+                                <td class="text-center py-3 px-4">❌ Low</td>
+                                <td class="text-center py-3 px-4">✅ High</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-medium">Audit Requirements</td>
+                                <td class="text-center py-3 px-4">✅ Full</td>
+                                <td class="text-center py-3 px-4">⚠️ Partial</td>
+                                <td class="text-center py-3 px-4">❌ Minimal</td>
+                                <td class="text-center py-3 px-4">✅ Full</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section class="mb-16">
+                <h2 class="text-3xl font-bold mb-8 text-text-primary">Next Steps</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">💻</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Try Domain Examples</h3>
+                        <p class="text-text-secondary mb-6">See domain-specific examples in action with real-world scenarios.</p>
+                        <a href="examples.html#domain-examples" class="text-primary hover:text-secondary font-semibold">View Examples →</a>
+                    </div>
+                    
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color hover:border-primary hover:-translate-y-1 transition-all duration-300">
+                        <div class="text-3xl mb-4">🚀</div>
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Get Started</h3>
+                        <p class="text-text-secondary mb-6">Learn how to integrate domain-specific CRDTs into your project.</p>
+                        <a href="getting-started.html" class="text-primary hover:text-secondary font-semibold">Get Started →</a>
+                    </div>
+                    
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-bg-secondary border-t border-border-color py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Documentation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="getting-started.html" class="text-text-secondary hover:text-primary transition-colors">Getting Started</a></li>
+                        <li><a href="crdt-types.html" class="text-text-secondary hover:text-primary transition-colors">CRDT Types</a></li>
+                        <li><a href="examples.html" class="text-text-secondary hover:text-primary transition-colors">Examples</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Features</h4>
+                    <ul class="space-y-2">
+                        <li><a href="domains.html" class="text-text-secondary hover:text-primary transition-colors">Domain Applications</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-primary">Community</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com/vertexclique/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">GitHub</a></li>
+                        <li><a href="https://crates.io/crates/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">Crates.io</a></li>
+                        <li><a href="https://docs.rs/crdtosphere" class="text-text-secondary hover:text-primary transition-colors">docs.rs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center pt-8 border-t border-border-color">
+                <p class="text-text-muted">&copy; 2025 CRDTosphere. Built with ❤️ for embedded systems by vertexclique.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

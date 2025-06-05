@@ -1,0 +1,221 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Core build and test matrix
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, nightly]
+        features: 
+          - "minimal"
+          - "standard" 
+          - "all"
+          - "platform-aurix"
+          - "platform-stm32"
+          - "platform-cortex-m"
+          - "platform-riscv"
+        include:
+          # Define feature combinations
+          - features: "minimal"
+            cargo_flags: "--no-default-features --features automotive,robotics,industrial,iot"
+          - features: "standard"
+            cargo_flags: "--features automotive,robotics,industrial,iot,hardware-atomic"
+          - features: "all"
+            cargo_flags: "--features all"
+          - features: "platform-aurix"
+            cargo_flags: "--features all,aurix"
+          - features: "platform-stm32"
+            cargo_flags: "--features all,stm32"
+          - features: "platform-cortex-m"
+            cargo_flags: "--features all,cortex-m"
+          - features: "platform-riscv"
+            cargo_flags: "--features all,riscv"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install ${{ matrix.rust }}
+        rustup default ${{ matrix.rust }}
+        rustup component add rustfmt clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ matrix.features }}-
+          ${{ runner.os }}-cargo-${{ matrix.rust }}-
+          ${{ runner.os }}-cargo-
+
+    - name: Check formatting
+      if: matrix.rust == 'stable' && matrix.features == 'all'
+      run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      if: matrix.rust == 'stable'
+      run: cargo clippy ${{ matrix.cargo_flags }} --all-targets -- -D warnings
+
+    - name: Build (Debug)
+      run: cargo build ${{ matrix.cargo_flags }}
+
+    - name: Build (Release)
+      run: cargo build --release ${{ matrix.cargo_flags }}
+
+    - name: Build (Embedded no_std)
+      if: matrix.features == 'minimal'
+      run: cargo build --release --no-default-features --features automotive,robotics,industrial,iot
+
+    - name: Run tests
+      run: cargo test ${{ matrix.cargo_flags }} --all --no-fail-fast
+
+    - name: Run doctests
+      if: matrix.rust == 'stable'
+      run: cargo test --doc ${{ matrix.cargo_flags }}
+
+  # Makefile integration tests
+  makefile-tests:
+    name: Makefile Test Suite
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-makefile-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run standard tests
+      run: make test
+
+    - name: Run minimal tests
+      run: make testmin
+
+    - name: Run platform-specific tests
+      run: |
+        make testaurix
+        make teststm32
+        make testcortex
+        make testrisc
+
+  # Property-based testing with extended runs
+  property-tests:
+    name: Property-Based Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-proptest-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run property tests with extended cases
+      run: |
+        # Run property tests with more cases for thorough validation
+        PROPTEST_CASES=100 cargo test --features all test_all_property_tests
+        PROPTEST_CASES=50 cargo test --features all --test test_gcounter
+        PROPTEST_CASES=50 cargo test --features all --test test_pncounter
+        PROPTEST_CASES=50 cargo test --features all --test test_lww_register
+        PROPTEST_CASES=50 cargo test --features all --test test_mvregister
+        PROPTEST_CASES=50 cargo test --features all --test test_gset
+        PROPTEST_CASES=50 cargo test --features all --test test_orset
+        PROPTEST_CASES=50 cargo test --features all --test test_lwwmap
+
+  # Memory and performance validation
+  memory-validation:
+    name: Memory & Performance Validation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-memory-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build release binary
+      run: cargo build --release --features all
+
+    - name: Build embedded binary (no_std)
+      run: cargo build --release --no-default-features --features automotive,robotics,industrial,iot
+
+  # Serde serialization tests
+  serde-tests:
+    name: Serde Serialization Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust toolchain
+      run: |
+        rustup toolchain install stable
+        rustup default stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-serde-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Test Serde functionality
+      run: |
+        # Test all CRDTs with Serde feature
+        cargo test --features all,serde --test test_gcounter serde
+        cargo test --features all,serde --test test_pncounter serde
+        cargo test --features all,serde --test test_lww_register serde
+        cargo test --features all,serde --test test_mvregister serde
+        cargo test --features all,serde --test test_gset serde
+        cargo test --features all,serde --test test_orset serde
+        cargo test --features all,serde --test test_lwwmap serde
+
+    - name: Test Serde with no_std
+      run: cargo test --no-default-features --features automotive,robotics,industrial,iot,serde
