@@ -146,6 +146,7 @@
 #![allow(clippy::const_is_empty)]
 #![allow(clippy::unnecessary_cast)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::if_same_then_else)]
 #![cfg_attr(test, allow(unused_mut))]
 
 // Core infrastructure modules

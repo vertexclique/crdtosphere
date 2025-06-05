@@ -97,6 +97,38 @@ required-features = ["hardware-atomic"]
 name = "atomic_lww_map"
 required-features = ["hardware-atomic"]
 
+# Basic examples (no features required)
+[[example]]
+name = "basic_counter"
+
+[[example]]
+name = "config_management"
+
+[[example]]
+name = "device_registry"
+
+# Domain-specific examples
+[[example]]
+name = "iot_sensor_mesh"
+path = "examples/iot/sensor_mesh.rs"
+required-features = ["iot"]
+
+[[example]]
+name = "robotics_swarm_coordination"
+path = "examples/robotics/swarm_coordination.rs"
+required-features = ["robotics"]
+
+[[example]]
+name = "industrial_production_monitoring"
+path = "examples/industrial/production_monitoring.rs"
+required-features = ["industrial"]
+
+# Platform-specific examples
+[[example]]
+name = "platforms_stm32_optimization"
+path = "examples/platforms/stm32_optimization.rs"
+required-features = ["stm32"]
+
 [package.metadata."docs.rs"]
 # Core features that work together (no platform conflicts)
 features = [
