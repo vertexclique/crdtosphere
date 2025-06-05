@@ -9,6 +9,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.css">
     <script>
         tailwind.config = {
             theme: {
@@ -18,14 +22,14 @@
                         'primary-dark': '#007799',
                         secondary: '#ff6b35',
                         accent: '#6366f1',
-                        'bg-primary': '#f8f9fa',
-                        'bg-secondary': '#e4e4e4',
-                        'bg-tertiary': '#d1d5db',
+                        'bg-primary': '#fcfcfb',
+                        'bg-secondary': '#f5f5f4',
+                        'bg-tertiary': '#e7e5e4',
                         'text-primary': '#1f2937',
                         'text-secondary': '#4b5563',
                         'text-muted': '#6b7280',
-                        'border-color': '#d1d5db',
-                        'code-bg': '#f3f4f6',
+                        'border-color': '#d6d3d1',
+                        'code-bg': '#2d3748',
                     },
                     fontFamily: {
                         'sans': ['Inter', 'system-ui', 'sans-serif'],
@@ -278,11 +282,7 @@
                 <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
                     <h3 class="text-xl font-semibold mb-4 text-primary">Add to your Cargo.toml</h3>
                     <pre class="bg-code-bg border border-border-color rounded-lg p-4 overflow-x-auto"><code class="language-toml">[dependencies]
-crdtosphere = "0.1.0"
-
-# Enable hardware atomic support for multi-core systems
-[features]
-hardware-atomic = ["crdtosphere/hardware-atomic"]</code></pre>
+crdtosphere = { version = "0.1.0", features = ["hardware-atomic"] }</code></pre>
                 </div>
 
                 <div class="bg-bg-secondary p-6 rounded-lg border border-border-color">
@@ -335,5 +335,21 @@ assert_eq!(register.get(), Some(&42));</code></pre>
             </div>
         </div>
     </footer>
+
+    <script>
+        // Initialize Prism.js copy-to-clipboard functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure Prism is loaded
+            if (typeof Prism !== 'undefined') {
+                // Force re-highlight all code blocks
+                Prism.highlightAll();
+                
+                // Initialize copy-to-clipboard if available
+                if (Prism.plugins && Prism.plugins.toolbar) {
+                    console.log('Copy-to-clipboard plugin loaded');
+                }
+            }
+        });
+    </script>
 </body>
 </html>

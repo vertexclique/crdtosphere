@@ -184,7 +184,7 @@ use crdtosphere::configs::IndustrialConfig;     // 256KB budget
 
 ## Examples
 
-- **[Automotive](examples/automotive/)** - ECU coordination, sensor fusion, safety systems
+- **[Automotive](examples/automotive_ecu_network/)** - ECU coordination, sensor fusion, safety systems
 - **[Robotics](examples/robotics/)** - Swarm coordination, task allocation, SLAM
 - **[IoT](examples/iot/)** - Device mesh, sensor networks, low-power coordination
 - **[Industrial](examples/industrial/)** - Production monitoring, predictive maintenance
@@ -207,15 +207,6 @@ use crdtosphere::configs::IndustrialConfig;     // 256KB budget
 - **Deterministic behavior** with mathematical convergence guarantees
 - **Bounded execution time** for real-time systems
 
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-- **Bug Reports** - [GitHub Issues](https://github.com/vertexclique/crdtosphere/issues)
-- **Feature Requests** - [GitHub Discussions](https://github.com/vertexclique/crdtosphere/discussions)
-- **Documentation** - Help improve our docs
-- **Testing** - Add tests for new platforms or use cases
-
 ## License
 
 Licensed under either of
@@ -224,9 +215,3 @@ Licensed under either of
 - MIT License ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
-
----
-
-<div align="center">
-  <strong>Built with ❤️ for the embedded systems community by vertexclique</strong>
-</div>

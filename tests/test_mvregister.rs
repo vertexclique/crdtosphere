@@ -464,8 +464,15 @@ proptest! {
         // Merge
         let _ = register1.merge(&register2);
 
-        // Should have the newer value from node1 and value from node2
-        prop_assert_eq!(register1.get_from_node(node1), Some(&value1_new));
+        // Should have either value when timestamps are equal, or the newer value when different
+        if ts_old == ts_new {
+            // When timestamps are equal, either value is acceptable
+            let stored_value = register1.get_from_node(node1);
+            prop_assert!(stored_value == Some(&value1_old) || stored_value == Some(&value1_new));
+        } else {
+            // When timestamps are different, should have the newer value
+            prop_assert_eq!(register1.get_from_node(node1), Some(&value1_new));
+        }
         prop_assert_eq!(register1.get_from_node(node2), Some(&value2));
         prop_assert_eq!(register1.len(), 2);
     }

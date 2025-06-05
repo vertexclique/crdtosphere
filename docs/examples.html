@@ -9,6 +9,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.css">
     <script>
         tailwind.config = {
             theme: {
@@ -18,14 +22,14 @@
                         'primary-dark': '#007799',
                         secondary: '#ff6b35',
                         accent: '#6366f1',
-                        'bg-primary': '#f8f9fa',
-                        'bg-secondary': '#e4e4e4',
-                        'bg-tertiary': '#d1d5db',
+                        'bg-primary': '#fcfcfb',
+                        'bg-secondary': '#f5f5f4',
+                        'bg-tertiary': '#e7e5e4',
                         'text-primary': '#1f2937',
                         'text-secondary': '#4b5563',
                         'text-muted': '#6b7280',
-                        'border-color': '#d1d5db',
-                        'code-bg': '#f3f4f6',
+                        'border-color': '#d6d3d1',
+                        'code-bg': '#2d3748',
                     },
                     fontFamily: {
                         'sans': ['Inter', 'system-ui', 'sans-serif'],
@@ -42,7 +46,7 @@
         <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <span class="text-xl font-bold text-primary">CRDTosphere</span>
+                    <a href="index.html" class="text-xl font-bold text-primary hover:text-primary-dark transition-colors">CRDTosphere</a>
                 </div>
                 <ul class="flex space-x-6">
                     <li><a href="index.html" class="text-text-secondary hover:text-primary px-3 py-2 rounded-md font-medium transition-colors">Home</a></li>
@@ -285,6 +289,104 @@ Total capabilities: 5</pre>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Distributed Configuration Store with Remove -->
+                    <div class="bg-bg-secondary p-8 rounded-xl border border-border-color">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-primary">Distributed Configuration Store with Remove</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">Basic</span>
+                        </div>
+                        <p class="text-text-secondary mb-6">Manage distributed key-value configuration with insert, update, and remove operations.</p>
+                        
+                        <div class="space-y-8">
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Add to Cargo.toml</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-toml">[dependencies]
+crdtosphere = "0.1.0"</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
+                                <h4 class="text-lg font-semibold mb-4 text-text-primary">Rust Code</h4>
+                                <div class="bg-code-bg border border-border-color rounded-lg p-6">
+                                    <pre><code class="language-rust">use crdtosphere::prelude::*;
+
+fn main() -> Result&lt;(), CRDTError&gt; {
+    // Configuration maps on different services
+    let mut service1_config = LWWMap::&lt;String, String, DefaultConfig&gt;::new(1);
+    let mut service2_config = LWWMap::&lt;String, String, DefaultConfig&gt;::new(2);
+    
+    // Service 1 sets initial configuration
+    service1_config.insert("max_connections".to_string(), "100".to_string(), 1000)?;
+    service1_config.insert("timeout_ms".to_string(), "5000".to_string(), 1001)?;
+    service1_config.insert("debug_mode".to_string(), "false".to_string(), 1002)?;
+    
+    println!("Service 1 initial config:");
+    for (key, value) in service1_config.iter() {
+        println!("  {}: {}", key, value);
+    }
+    println!("Config entries: {}", service1_config.len());
+    
+    // Service 2 updates some configuration
+    service2_config.insert("max_connections".to_string(), "200".to_string(), 2000)?; // Newer
+    service2_config.insert("buffer_size".to_string(), "8192".to_string(), 2001)?; // New
+    
+    // Merge configurations
+    service1_config.merge(&service2_config)?;
+    
+    println!("\nAfter merge:");
+    for (key, value) in service1_config.iter() {
+        println!("  {}: {}", key, value);
+    }
+    
+    // Remove debug mode (no longer needed)
+    let removed = service1_config.remove(&"debug_mode".to_string());
+    println!("\nRemoved debug_mode: {:?}", removed);
+    println!("Remaining capacity: {}", service1_config.remaining_capacity());
+    
+    // Add new configuration in freed space
+    service1_config.insert("log_level".to_string(), "info".to_string(), 3000)?;
+    
+    println!("\nFinal configuration:");
+    for (key, value) in service1_config.iter() {
+        println!("  {}: {}", key, value);
+    }
+    println!("Total entries: {}", service1_config.len());
+    
+    Ok(())
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-bg-tertiary p-4 rounded-lg border border-border-color">
+                            <h4 class="font-semibold text-text-primary mb-2">Expected Output:</h4>
+                            <div class="bg-code-bg border border-border-color rounded-lg p-3">
+                                <pre class="text-green-400 text-sm">Service 1 initial config:
+  max_connections: 100
+  timeout_ms: 5000
+  debug_mode: false
+Config entries: 3
+
+After merge:
+  max_connections: 200
+  timeout_ms: 5000
+  debug_mode: false
+  buffer_size: 8192
+
+Removed debug_mode: Some("false")
+Remaining capacity: 5
+
+Final configuration:
+  max_connections: 200
+  timeout_ms: 5000
+  buffer_size: 8192
+  log_level: info
+Total entries: 4</pre>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -299,7 +401,7 @@ Total capabilities: 5</pre>
                             <h3 class="text-2xl font-bold text-primary">Concurrent Device Registration</h3>
                             <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">Atomic</span>
                         </div>
-                        <p class="text-text-secondary mb-6">Multiple threads registering device capabilities concurrently.</p>
+                        <p class="text-text-secondary mb-6">Multiple threads registering device capabilities concurrently. - std is for demo</p>
                         
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div class="bg-bg-tertiary p-6 rounded-lg border border-border-color">
