@@ -1,3 +1,7 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+
 use crdtosphere::prelude::*;
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 
