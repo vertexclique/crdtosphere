@@ -642,10 +642,8 @@ proptest! {
 
         // Insert operations
         for (key, value, timestamp) in operations {
-            if map.insert(key, value, timestamp).is_ok() {
-                if !inserted_keys.contains(&key) {
-                    inserted_keys.push(key);
-                }
+            if map.insert(key, value, timestamp).is_ok() && !inserted_keys.contains(&key) {
+                inserted_keys.push(key);
             }
         }
 

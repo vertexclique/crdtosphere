@@ -12,7 +12,7 @@ use crdtosphere::prelude::*;
 enum Capability {
     WiFi,
     Bluetooth,
-    GPS,
+    Gps,
     Camera,
     Accelerometer,
 }
@@ -25,7 +25,7 @@ fn main() -> Result<(), CRDTError> {
     // Mobile device capabilities
     mobile_device.insert(Capability::WiFi)?;
     mobile_device.insert(Capability::Bluetooth)?;
-    mobile_device.insert(Capability::GPS)?;
+    mobile_device.insert(Capability::Gps)?;
     mobile_device.insert(Capability::Camera)?;
 
     // IoT device capabilities
@@ -35,9 +35,9 @@ fn main() -> Result<(), CRDTError> {
     // Check capabilities
     println!(
         "Mobile has GPS: {}",
-        mobile_device.contains(&Capability::GPS)
+        mobile_device.contains(&Capability::Gps)
     );
-    println!("IoT has GPS: {}", iot_device.contains(&Capability::GPS));
+    println!("IoT has GPS: {}", iot_device.contains(&Capability::Gps));
 
     // Merge to get all capabilities in network
     mobile_device.merge(&iot_device)?;
