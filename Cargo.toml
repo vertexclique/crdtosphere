@@ -10,7 +10,7 @@ repository = "https://github.com/vertexclique/crdtosphere"
 homepage = "https://github.com/vertexclique/crdtosphere"
 documentation = "https://docs.rs/crdtosphere"
 readme = "README.md"
-keywords = ["crdt", "embedded", "no-std", "distributed", "automotive", "robotics", "iot"]
+keywords = ["crdt", "embedded", "no-std", "distributed", "iot"]
 categories = ["embedded", "data-structures", "no-std"]
 
 exclude = [
