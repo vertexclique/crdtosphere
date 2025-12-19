@@ -510,8 +510,8 @@ where
         #[cfg(not(feature = "hardware-atomic"))]
         {
             // Serialize only the used portion of the array as a slice
-            state.serialize_field("elements", &&self.elements[..self.count])?;
-            state.serialize_field("count", &self.count)?;
+            state.serialize_field("e", &&self.elements[..self.count])?;
+            state.serialize_field("ct", &self.count)?;
         }
 
         #[cfg(feature = "hardware-atomic")]
@@ -519,8 +519,8 @@ where
             // For atomic version, we need to extract values safely
             let current_count = self.count.load(Ordering::Relaxed);
             let elements_ref = unsafe { &*self.elements.get() };
-            state.serialize_field("elements", &&elements_ref[..current_count])?;
-            state.serialize_field("count", &current_count)?;
+            state.serialize_field("e", &&elements_ref[..current_count])?;
+            state.serialize_field("ct", &current_count)?;
         }
 
         state.end()
@@ -540,9 +540,11 @@ where
         use serde::de::{self, MapAccess, Visitor};
 
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
+        #[serde(field_identifier)]
         enum Field {
+            #[serde(rename = "e")]
             Elements,
+            #[serde(rename = "ct")]
             Count,
         }
 
@@ -571,7 +573,7 @@ where
                     match key {
                         Field::Elements => {
                             if elements.is_some() {
-                                return Err(de::Error::duplicate_field("elements"));
+                                return Err(de::Error::duplicate_field("e"));
                             }
                             // Use a custom deserializer that doesn't require Vec
                             use serde::de::SeqAccess;
@@ -656,7 +658,7 @@ where
                         }
                         Field::Count => {
                             if count.is_some() {
-                                return Err(de::Error::duplicate_field("count"));
+                                return Err(de::Error::duplicate_field("ct"));
                             }
                             count = Some(map.next_value::<usize>()?);
                         }
@@ -664,8 +666,8 @@ where
                 }
 
                 let elements_array =
-                    elements.ok_or_else(|| de::Error::missing_field("elements"))?;
-                let count = count.ok_or_else(|| de::Error::missing_field("count"))?;
+                    elements.ok_or_else(|| de::Error::missing_field("e"))?;
+                let count = count.ok_or_else(|| de::Error::missing_field("ct"))?;
 
                 // Validate count is within capacity
                 if count > CAPACITY {
@@ -693,7 +695,7 @@ where
             }
         }
 
-        const FIELDS: &[&str] = &["elements", "count"];
+        const FIELDS: &[&str] = &["e", "ct"];
         deserializer.deserialize_struct(
             "GSet",
             FIELDS,

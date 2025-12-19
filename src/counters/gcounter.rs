@@ -432,7 +432,7 @@ impl<C: MemoryConfig, const CAPACITY: usize> Serialize for GCounter<C, CAPACITY>
         // Serialize the logical state (counter values) as slice to handle any CAPACITY
         #[cfg(not(feature = "hardware-atomic"))]
         {
-            state.serialize_field("counters", &self.counters[..])?;
+            state.serialize_field("c", &self.counters[..])?;
         }
 
         #[cfg(feature = "hardware-atomic")]
@@ -442,9 +442,9 @@ impl<C: MemoryConfig, const CAPACITY: usize> Serialize for GCounter<C, CAPACITY>
             for i in 0..CAPACITY {
                 counters[i] = self.counters[i].load(Ordering::Relaxed);
             }
-            state.serialize_field("counters", &counters[..])?;
+            state.serialize_field("c", &counters[..])?;
         }
-        state.serialize_field("node_id", &self.node_id)?;
+        state.serialize_field("n", &self.node_id)?;
         state.end()
     }
 }
@@ -459,9 +459,11 @@ impl<'de, C: MemoryConfig, const CAPACITY: usize> Deserialize<'de> for GCounter<
         use serde::de::{self, MapAccess, Visitor};
 
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
+        #[serde(field_identifier)]
         enum Field {
+            #[serde(rename = "c")]
             Counters,
+            #[serde(rename = "n")]
             NodeId,
         }
 
@@ -487,7 +489,7 @@ impl<'de, C: MemoryConfig, const CAPACITY: usize> Deserialize<'de> for GCounter<
                     match key {
                         Field::Counters => {
                             if counters.is_some() {
-                                return Err(de::Error::duplicate_field("counters"));
+                                return Err(de::Error::duplicate_field("c"));
                             }
                             // Use a simpler approach - deserialize as a slice and convert
                             use serde::de::SeqAccess;
@@ -546,15 +548,15 @@ impl<'de, C: MemoryConfig, const CAPACITY: usize> Deserialize<'de> for GCounter<
                         }
                         Field::NodeId => {
                             if node_id.is_some() {
-                                return Err(de::Error::duplicate_field("node_id"));
+                                return Err(de::Error::duplicate_field("n"));
                             }
                             node_id = Some(map.next_value()?);
                         }
                     }
                 }
 
-                let counters = counters.ok_or_else(|| de::Error::missing_field("counters"))?;
-                let node_id = node_id.ok_or_else(|| de::Error::missing_field("node_id"))?;
+                let counters = counters.ok_or_else(|| de::Error::missing_field("c"))?;
+                let node_id = node_id.ok_or_else(|| de::Error::missing_field("n"))?;
 
                 // Reconstruct the GCounter
                 #[cfg(not(feature = "hardware-atomic"))]
@@ -582,7 +584,7 @@ impl<'de, C: MemoryConfig, const CAPACITY: usize> Deserialize<'de> for GCounter<
             }
         }
 
-        const FIELDS: &[&str] = &["counters", "node_id"];
+        const FIELDS: &[&str] = &["c", "n"];
         deserializer.deserialize_struct(
             "GCounter",
             FIELDS,

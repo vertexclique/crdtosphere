@@ -404,9 +404,9 @@ where
         // Serialize the logical state
         #[cfg(not(feature = "hardware-atomic"))]
         {
-            state.serialize_field("current_value", &self.current_value)?;
-            state.serialize_field("current_timestamp", &self.current_timestamp.as_u64())?;
-            state.serialize_field("current_node_id", &self.current_node_id)?;
+            state.serialize_field("cv", &self.current_value)?;
+            state.serialize_field("cts", &self.current_timestamp.as_u64())?;
+            state.serialize_field("cn", &self.current_node_id)?;
         }
 
         #[cfg(feature = "hardware-atomic")]
@@ -416,12 +416,12 @@ where
             let current_timestamp = self.current_timestamp.load(Ordering::Relaxed) as u64;
             let current_node_id = self.current_node_id.load(Ordering::Relaxed);
 
-            state.serialize_field("current_value", current_value)?;
-            state.serialize_field("current_timestamp", &current_timestamp)?;
-            state.serialize_field("current_node_id", &current_node_id)?;
+            state.serialize_field("cv", current_value)?;
+            state.serialize_field("cts", &current_timestamp)?;
+            state.serialize_field("cn", &current_node_id)?;
         }
 
-        state.serialize_field("node_id", &self.node_id)?;
+        state.serialize_field("n", &self.node_id)?;
         state.end()
     }
 }
@@ -439,11 +439,15 @@ where
         use serde::de::{self, MapAccess, Visitor};
 
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
+        #[serde(field_identifier)]
         enum Field {
+            #[serde(rename = "cv")]
             CurrentValue,
+            #[serde(rename = "cts")]
             CurrentTimestamp,
+            #[serde(rename = "cn")]
             CurrentNodeId,
+            #[serde(rename = "n")]
             NodeId,
         }
 
@@ -474,25 +478,25 @@ where
                     match key {
                         Field::CurrentValue => {
                             if current_value.is_some() {
-                                return Err(de::Error::duplicate_field("current_value"));
+                                return Err(de::Error::duplicate_field("cv"));
                             }
                             current_value = Some(map.next_value::<Option<T>>()?);
                         }
                         Field::CurrentTimestamp => {
                             if current_timestamp.is_some() {
-                                return Err(de::Error::duplicate_field("current_timestamp"));
+                                return Err(de::Error::duplicate_field("cts"));
                             }
                             current_timestamp = Some(map.next_value::<u64>()?);
                         }
                         Field::CurrentNodeId => {
                             if current_node_id.is_some() {
-                                return Err(de::Error::duplicate_field("current_node_id"));
+                                return Err(de::Error::duplicate_field("cn"));
                             }
                             current_node_id = Some(map.next_value::<NodeId>()?);
                         }
                         Field::NodeId => {
                             if node_id.is_some() {
-                                return Err(de::Error::duplicate_field("node_id"));
+                                return Err(de::Error::duplicate_field("n"));
                             }
                             node_id = Some(map.next_value::<NodeId>()?);
                         }
@@ -500,12 +504,12 @@ where
                 }
 
                 let current_value =
-                    current_value.ok_or_else(|| de::Error::missing_field("current_value"))?;
+                    current_value.ok_or_else(|| de::Error::missing_field("cv"))?;
                 let current_timestamp = current_timestamp
-                    .ok_or_else(|| de::Error::missing_field("current_timestamp"))?;
+                    .ok_or_else(|| de::Error::missing_field("cts"))?;
                 let current_node_id =
-                    current_node_id.ok_or_else(|| de::Error::missing_field("current_node_id"))?;
-                let node_id = node_id.ok_or_else(|| de::Error::missing_field("node_id"))?;
+                    current_node_id.ok_or_else(|| de::Error::missing_field("cn"))?;
+                let node_id = node_id.ok_or_else(|| de::Error::missing_field("n"))?;
 
                 // Reconstruct the LWWRegister
                 #[cfg(not(feature = "hardware-atomic"))]
@@ -532,12 +536,7 @@ where
             }
         }
 
-        const FIELDS: &[&str] = &[
-            "current_value",
-            "current_timestamp",
-            "current_node_id",
-            "node_id",
-        ];
+        const FIELDS: &[&str] = &["cv", "cts", "cn", "n"];
         deserializer.deserialize_struct(
             "LWWRegister",
             FIELDS,

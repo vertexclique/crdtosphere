@@ -122,9 +122,11 @@ where
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct ValueEntry<T> {
+    #[cfg_attr(feature = "serde", serde(rename = "v"))]
     value: T,
-    #[cfg_attr(feature = "serde", serde(with = "compact_timestamp_serde"))]
+    #[cfg_attr(feature = "serde", serde(with = "compact_timestamp_serde", rename = "ts"))]
     timestamp: CompactTimestamp,
+    #[cfg_attr(feature = "serde", serde(rename = "n"))]
     node_id: NodeId,
 }
 
@@ -167,8 +169,8 @@ where
         #[cfg(not(feature = "hardware-atomic"))]
         {
             // Serialize only the used portion of the array as a slice
-            state.serialize_field("values", &&self.values[..self.count])?;
-            state.serialize_field("count", &self.count)?;
+            state.serialize_field("vs", &&self.values[..self.count])?;
+            state.serialize_field("ct", &self.count)?;
         }
 
         #[cfg(feature = "hardware-atomic")]
@@ -176,11 +178,11 @@ where
             // For atomic version, we need to extract values safely
             let current_count = self.count.load(Ordering::Relaxed);
             let values_ref = unsafe { &*self.values.get() };
-            state.serialize_field("values", &&values_ref[..current_count])?;
-            state.serialize_field("count", &current_count)?;
+            state.serialize_field("vs", &&values_ref[..current_count])?;
+            state.serialize_field("ct", &current_count)?;
         }
 
-        state.serialize_field("node_id", &self.node_id)?;
+        state.serialize_field("n", &self.node_id)?;
         state.end()
     }
 }
@@ -198,10 +200,13 @@ where
         use serde::de::{self, MapAccess, Visitor};
 
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
+        #[serde(field_identifier)]
         enum Field {
+            #[serde(rename = "vs")]
             Values,
+            #[serde(rename = "ct")]
             Count,
+            #[serde(rename = "n")]
             NodeId,
         }
 
@@ -232,7 +237,7 @@ where
                     match key {
                         Field::Values => {
                             if values.is_some() {
-                                return Err(de::Error::duplicate_field("values"));
+                                return Err(de::Error::duplicate_field("vs"));
                             }
                             // Use a custom deserializer that doesn't require Vec
                             use serde::de::SeqAccess;
@@ -317,22 +322,22 @@ where
                         }
                         Field::Count => {
                             if count.is_some() {
-                                return Err(de::Error::duplicate_field("count"));
+                                return Err(de::Error::duplicate_field("ct"));
                             }
                             count = Some(map.next_value::<usize>()?);
                         }
                         Field::NodeId => {
                             if node_id.is_some() {
-                                return Err(de::Error::duplicate_field("node_id"));
+                                return Err(de::Error::duplicate_field("n"));
                             }
                             node_id = Some(map.next_value::<NodeId>()?);
                         }
                     }
                 }
 
-                let values_vec = values.ok_or_else(|| de::Error::missing_field("values"))?;
-                let count = count.ok_or_else(|| de::Error::missing_field("count"))?;
-                let node_id = node_id.ok_or_else(|| de::Error::missing_field("node_id"))?;
+                let values_vec = values.ok_or_else(|| de::Error::missing_field("vs"))?;
+                let count = count.ok_or_else(|| de::Error::missing_field("ct"))?;
+                let node_id = node_id.ok_or_else(|| de::Error::missing_field("n"))?;
 
                 // Validate count matches values length
                 if count != values_vec.len() {
@@ -367,7 +372,7 @@ where
             }
         }
 
-        const FIELDS: &[&str] = &["values", "count", "node_id"];
+        const FIELDS: &[&str] = &["vs", "ct", "n"];
         deserializer.deserialize_struct(
             "MVRegister",
             FIELDS,

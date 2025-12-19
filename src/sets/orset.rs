@@ -145,9 +145,11 @@ where
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct ElementEntry<T> {
+    #[cfg_attr(feature = "serde", serde(rename = "el"))]
     element: T,
-    #[cfg_attr(feature = "serde", serde(with = "compact_timestamp_serde"))]
+    #[cfg_attr(feature = "serde", serde(with = "compact_timestamp_serde", rename = "ts"))]
     timestamp: CompactTimestamp,
+    #[cfg_attr(feature = "serde", serde(rename = "n"))]
     node_id: NodeId,
 }
 
@@ -155,13 +157,15 @@ struct ElementEntry<T> {
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct TombstoneEntry<T> {
+    #[cfg_attr(feature = "serde", serde(rename = "el"))]
     element: T,
-    #[cfg_attr(feature = "serde", serde(with = "compact_timestamp_serde"))]
+    #[cfg_attr(feature = "serde", serde(with = "compact_timestamp_serde", rename = "ts"))]
     timestamp: CompactTimestamp,
+    #[cfg_attr(feature = "serde", serde(rename = "n"))]
     node_id: NodeId,
     #[cfg_attr(
         feature = "serde",
-        serde(with = "compact_timestamp_serde", rename = "remove_timestamp")
+        serde(with = "compact_timestamp_serde", rename = "rt")
     )]
     remove_timestamp: CompactTimestamp,
 }
@@ -858,10 +862,10 @@ where
         #[cfg(not(feature = "hardware-atomic"))]
         {
             // Serialize only the used portions of the arrays as slices
-            state.serialize_field("elements", &&self.elements[..self.element_count])?;
-            state.serialize_field("element_count", &self.element_count)?;
-            state.serialize_field("tombstones", &&self.tombstones[..self.tombstone_count])?;
-            state.serialize_field("tombstone_count", &self.tombstone_count)?;
+            state.serialize_field("e", &&self.elements[..self.element_count])?;
+            state.serialize_field("ec", &self.element_count)?;
+            state.serialize_field("t", &&self.tombstones[..self.tombstone_count])?;
+            state.serialize_field("tc", &self.tombstone_count)?;
         }
 
         #[cfg(feature = "hardware-atomic")]
@@ -871,13 +875,13 @@ where
             let current_tombstone_count = self.tombstone_count.load(Ordering::Relaxed);
             let elements_ref = unsafe { &*self.elements.get() };
             let tombstones_ref = unsafe { &*self.tombstones.get() };
-            state.serialize_field("elements", &&elements_ref[..current_element_count])?;
-            state.serialize_field("element_count", &current_element_count)?;
-            state.serialize_field("tombstones", &&tombstones_ref[..current_tombstone_count])?;
-            state.serialize_field("tombstone_count", &current_tombstone_count)?;
+            state.serialize_field("e", &&elements_ref[..current_element_count])?;
+            state.serialize_field("ec", &current_element_count)?;
+            state.serialize_field("t", &&tombstones_ref[..current_tombstone_count])?;
+            state.serialize_field("tc", &current_tombstone_count)?;
         }
 
-        state.serialize_field("node_id", &self.node_id)?;
+        state.serialize_field("n", &self.node_id)?;
         state.end()
     }
 }
@@ -895,12 +899,17 @@ where
         use serde::de::{self, MapAccess, Visitor};
 
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
+        #[serde(field_identifier)]
         enum Field {
+            #[serde(rename = "e")]
             Elements,
+            #[serde(rename = "ec")]
             ElementCount,
+            #[serde(rename = "t")]
             Tombstones,
+            #[serde(rename = "tc")]
             TombstoneCount,
+            #[serde(rename = "n")]
             NodeId,
         }
 
@@ -932,7 +941,7 @@ where
                     match key {
                         Field::Elements => {
                             if elements.is_some() {
-                                return Err(de::Error::duplicate_field("elements"));
+                                return Err(de::Error::duplicate_field("e"));
                             }
                             // Use a custom deserializer that doesn't require Vec
                             use serde::de::SeqAccess;
@@ -1017,13 +1026,13 @@ where
                         }
                         Field::ElementCount => {
                             if element_count.is_some() {
-                                return Err(de::Error::duplicate_field("element_count"));
+                                return Err(de::Error::duplicate_field("ec"));
                             }
                             element_count = Some(map.next_value::<usize>()?);
                         }
                         Field::Tombstones => {
                             if tombstones.is_some() {
-                                return Err(de::Error::duplicate_field("tombstones"));
+                                return Err(de::Error::duplicate_field("t"));
                             }
                             // Use a custom deserializer for tombstones
                             use serde::de::SeqAccess;
@@ -1108,13 +1117,13 @@ where
                         }
                         Field::TombstoneCount => {
                             if tombstone_count.is_some() {
-                                return Err(de::Error::duplicate_field("tombstone_count"));
+                                return Err(de::Error::duplicate_field("tc"));
                             }
                             tombstone_count = Some(map.next_value::<usize>()?);
                         }
                         Field::NodeId => {
                             if node_id.is_some() {
-                                return Err(de::Error::duplicate_field("node_id"));
+                                return Err(de::Error::duplicate_field("n"));
                             }
                             node_id = Some(map.next_value::<NodeId>()?);
                         }
@@ -1122,14 +1131,14 @@ where
                 }
 
                 let elements_array =
-                    elements.ok_or_else(|| de::Error::missing_field("elements"))?;
+                    elements.ok_or_else(|| de::Error::missing_field("e"))?;
                 let element_count =
-                    element_count.ok_or_else(|| de::Error::missing_field("element_count"))?;
+                    element_count.ok_or_else(|| de::Error::missing_field("ec"))?;
                 let tombstones_array =
-                    tombstones.ok_or_else(|| de::Error::missing_field("tombstones"))?;
+                    tombstones.ok_or_else(|| de::Error::missing_field("t"))?;
                 let tombstone_count =
-                    tombstone_count.ok_or_else(|| de::Error::missing_field("tombstone_count"))?;
-                let node_id = node_id.ok_or_else(|| de::Error::missing_field("node_id"))?;
+                    tombstone_count.ok_or_else(|| de::Error::missing_field("tc"))?;
+                let node_id = node_id.ok_or_else(|| de::Error::missing_field("n"))?;
 
                 // Validate counts are within capacity
                 if element_count > CAPACITY {
@@ -1166,13 +1175,7 @@ where
             }
         }
 
-        const FIELDS: &[&str] = &[
-            "elements",
-            "element_count",
-            "tombstones",
-            "tombstone_count",
-            "node_id",
-        ];
+        const FIELDS: &[&str] = &["e", "ec", "t", "tc", "n"];
         deserializer.deserialize_struct(
             "ORSet",
             FIELDS,

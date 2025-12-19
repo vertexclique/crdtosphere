@@ -674,8 +674,8 @@ impl<C: MemoryConfig> Serialize for PNCounter<C> {
         // Serialize the logical state (positive and negative counter values) as slices
         #[cfg(not(feature = "hardware-atomic"))]
         {
-            state.serialize_field("positive", &self.positive[..])?;
-            state.serialize_field("negative", &self.negative[..])?;
+            state.serialize_field("p", &self.positive[..])?;
+            state.serialize_field("ng", &self.negative[..])?;
         }
 
         #[cfg(feature = "hardware-atomic")]
@@ -687,11 +687,11 @@ impl<C: MemoryConfig> Serialize for PNCounter<C> {
                 positive[i] = self.positive[i].load(Ordering::Relaxed);
                 negative[i] = self.negative[i].load(Ordering::Relaxed);
             }
-            state.serialize_field("positive", &positive[..])?;
-            state.serialize_field("negative", &negative[..])?;
+            state.serialize_field("p", &positive[..])?;
+            state.serialize_field("ng", &negative[..])?;
         }
 
-        state.serialize_field("node_id", &self.node_id)?;
+        state.serialize_field("n", &self.node_id)?;
         state.end()
     }
 }
@@ -706,10 +706,13 @@ impl<'de, C: MemoryConfig> Deserialize<'de> for PNCounter<C> {
         use serde::de::{self, MapAccess, Visitor};
 
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
+        #[serde(field_identifier)]
         enum Field {
+            #[serde(rename = "p")]
             Positive,
+            #[serde(rename = "ng")]
             Negative,
+            #[serde(rename = "n")]
             NodeId,
         }
 
@@ -736,7 +739,7 @@ impl<'de, C: MemoryConfig> Deserialize<'de> for PNCounter<C> {
                     match key {
                         Field::Positive => {
                             if positive.is_some() {
-                                return Err(de::Error::duplicate_field("positive"));
+                                return Err(de::Error::duplicate_field("p"));
                             }
                             // Use custom array deserializer for no_std compatibility
                             use serde::de::SeqAccess;
@@ -795,7 +798,7 @@ impl<'de, C: MemoryConfig> Deserialize<'de> for PNCounter<C> {
                         }
                         Field::Negative => {
                             if negative.is_some() {
-                                return Err(de::Error::duplicate_field("negative"));
+                                return Err(de::Error::duplicate_field("ng"));
                             }
                             // Use the same custom array deserializer
                             use serde::de::SeqAccess;
@@ -854,16 +857,16 @@ impl<'de, C: MemoryConfig> Deserialize<'de> for PNCounter<C> {
                         }
                         Field::NodeId => {
                             if node_id.is_some() {
-                                return Err(de::Error::duplicate_field("node_id"));
+                                return Err(de::Error::duplicate_field("n"));
                             }
                             node_id = Some(map.next_value()?);
                         }
                     }
                 }
 
-                let positive = positive.ok_or_else(|| de::Error::missing_field("positive"))?;
-                let negative = negative.ok_or_else(|| de::Error::missing_field("negative"))?;
-                let node_id = node_id.ok_or_else(|| de::Error::missing_field("node_id"))?;
+                let positive = positive.ok_or_else(|| de::Error::missing_field("p"))?;
+                let negative = negative.ok_or_else(|| de::Error::missing_field("ng"))?;
+                let node_id = node_id.ok_or_else(|| de::Error::missing_field("n"))?;
 
                 // Reconstruct the PNCounter
                 #[cfg(not(feature = "hardware-atomic"))]
@@ -895,7 +898,7 @@ impl<'de, C: MemoryConfig> Deserialize<'de> for PNCounter<C> {
             }
         }
 
-        const FIELDS: &[&str] = &["positive", "negative", "node_id"];
+        const FIELDS: &[&str] = &["p", "ng", "n"];
         deserializer.deserialize_struct(
             "PNCounter",
             FIELDS,
